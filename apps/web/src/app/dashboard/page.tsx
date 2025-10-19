@@ -17,7 +17,6 @@ export default function DashboardPage() {
   const [showUserTasks, setShowUserTasks] = useState(false);
   const [familyMembers, setFamilyMembers] = useState([]);
 
-  ]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('');
