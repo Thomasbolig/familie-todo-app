@@ -15,8 +15,12 @@ export default function DashboardPage() {
     leisure: ['alle']
   });
   const [showUserTasks, setShowUserTasks] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState([]);
-
+  const [familyMembers, setFamilyMembers] = useState([
+    { id: 1, name: 'Emma', emoji: '👧', color: '#fef3c7', borderColor: '#f59e0b', role: 'barn', profileImage: null },
+    { id: 2, name: 'Oliver', emoji: '👦', color: '#dbeafe', borderColor: '#3b82f6', role: 'barn', profileImage: null },
+    { id: 3, name: 'Mor', emoji: '👩', color: '#f3e8ff', borderColor: '#8b5cf6', role: 'mor', profileImage: null },
+    { id: 4, name: 'Far', emoji: '👨', color: '#e0f2fe', borderColor: '#0284c7', role: 'far', profileImage: null }
+  ]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('');
