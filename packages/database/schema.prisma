@@ -1,0 +1,366 @@
+// Prisma schema for Family Todo App
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatar    String?
+  role      UserRole @default(PARENT)
+  age       Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  familyMemberships FamilyMember[]
+  ownedFamilies     Family[]       @relation("FamilyOwner")
+  ownedProjects     Project[]      @relation("ProjectOwner")
+  createdTasks      Task[]         @relation("TaskCreator")
+  assignedTasks     Task[]         @relation("TaskAssignee")
+  comments          Comment[]
+  attachments       Attachment[]
+  calendarEvents    CalendarEvent[]
+  notifications     Notification[]
+  activities        Activity[]
+
+  @@map("users")
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner    User           @relation("FamilyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members  FamilyMember[]
+  projects Project[]
+  children Child[]
+  events   CalendarEvent[]
+
+  @@map("families")
+}
+
+model FamilyMember {
+  id       String             @id @default(cuid())
+  userId   String
+  familyId String
+  role     FamilyMemberRole   @default(PARENT)
+  permissions Permission[]
+  joinedAt DateTime          @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId])
+  @@map("family_members")
+}
+
+model Project {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  familyId    String
+  ownerId     String
+  status      ProjectStatus     @default(ACTIVE)
+  priority    Priority          @default(MEDIUM)
+  dueDate     DateTime?
+  visibility  Visibility        @default(FAMILY)
+  sharedWith  String[]          @default([])
+  progress    Int               @default(0) // 0-100
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  owner  User   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id               String            @id @default(cuid())
+  title            String
+  description      String?
+  projectId        String
+  parentTaskId     String?          // For subtasks
+  assignedTo       String?
+  createdBy        String
+  status           TaskStatus        @default(TODO)
+  priority         Priority          @default(MEDIUM)
+  dueDate          DateTime?
+  estimatedMinutes Int?
+  actualMinutes    Int?
+  visibility       Visibility        @default(FAMILY)
+  sharedWith       String[]          @default([])
+  tags             String[]          @default([])
+  isRecurring      Boolean           @default(false)
+  recurringPattern Json?             // Stores RecurringPattern as JSON
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee     User?        @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  creator      User         @relation("TaskCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  parentTask   Task?        @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks     Task[]       @relation("TaskSubtasks")
+  comments     Comment[]
+  attachments  Attachment[]
+  dependencies TaskDependency[] @relation("DependentTask")
+  dependsOn    TaskDependency[] @relation("RequiredTask")
+
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id               String @id @default(cuid())
+  dependentTaskId  String // Task that depends
+  requiredTaskId   String // Task that must be completed first
+
+  // Relations
+  dependentTask Task @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  requiredTask  Task @relation("RequiredTask", fields: [requiredTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentTaskId, requiredTaskId])
+  @@map("task_dependencies")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  taskId     String
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Child {
+  id        String   @id @default(cuid())
+  familyId  String
+  name      String
+  birthDate DateTime
+  grade     String?
+  school    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  family     Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  activities Activity[]
+  events     CalendarEvent[]
+
+  @@map("children")
+}
+
+model Activity {
+  id          String              @id @default(cuid())
+  childId     String
+  name        String
+  type        ActivityType        @default(OTHER)
+  location    String?
+  instructor  String?
+  isActive    Boolean             @default(true)
+  startDate   DateTime
+  endDate     DateTime?
+  createdBy   String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relations
+  child     Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+  creator   User               @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  schedules ActivitySchedule[]
+
+  @@map("activities")
+}
+
+model ActivitySchedule {
+  id                  String  @id @default(cuid())
+  activityId          String
+  dayOfWeek           Int     // 0 = Sunday, 1 = Monday, etc.
+  startTime           String  // HH:MM format
+  endTime             String
+  location            String?
+  needsTransport      Boolean @default(false)
+  transportAssignedTo String?
+  notes               String?
+
+  // Relations
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("activity_schedules")
+}
+
+model CalendarEvent {
+  id               String            @id @default(cuid())
+  childId          String?           // null for family events
+  familyId         String
+  title            String
+  description      String?
+  type             CalendarEventType @default(OTHER)
+  startDateTime    DateTime
+  endDateTime      DateTime?
+  isAllDay         Boolean           @default(false)
+  location         String?
+  assignedTo       String?
+  reminders        Json[]            @default([]) // Array of Reminder JSON objects
+  isRecurring      Boolean           @default(false)
+  recurringPattern Json?             // RecurringPattern as JSON
+  createdBy        String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  child   Child?  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  family  Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  creator User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("calendar_events")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json             @default("{}")
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NotificationSettings {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  pushEnabled      Boolean @default(true)
+  emailEnabled     Boolean @default(true)
+  smsEnabled       Boolean @default(false)
+  taskAssigned     Boolean @default(true)
+  taskDue          Boolean @default(true)
+  taskCompleted    Boolean @default(true)
+  commentMentioned Boolean @default(true)
+  projectShared    Boolean @default(true)
+  dailyDigest      Boolean @default(false)
+  weeklyReport     Boolean @default(false)
+
+  @@map("notification_settings")
+}
+
+// Enums
+enum UserRole {
+  PARENT
+  CHILD
+  GUEST
+}
+
+enum FamilyMemberRole {
+  OWNER
+  PARENT
+  CHILD
+  GUEST
+}
+
+enum Permission {
+  VIEW
+  CREATE
+  EDIT
+  DELETE
+  SHARE
+  ADMIN
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Visibility {
+  PRIVATE
+  FAMILY
+  CUSTOM
+}
+
+enum ActivityType {
+  SPORT
+  MUSIC
+  ART
+  ACADEMIC
+  SOCIAL
+  OTHER
+}
+
+enum CalendarEventType {
+  TASK
+  ACTIVITY
+  APPOINTMENT
+  BIRTHDAY
+  SCHOOL
+  TRANSPORT
+  OTHER
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_DUE
+  TASK_COMPLETED
+  COMMENT_MENTIONED
+  PROJECT_SHARED
+}

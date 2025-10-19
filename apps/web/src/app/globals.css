@@ -1,0 +1,471 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9fafb;
+}
+
+/* Basic utility classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-8 {
+  padding: 2rem;
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* Card styles */
+.card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* Priority colors */
+.priority-high {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 2px solid #f87171;
+  font-weight: 600;
+}
+
+.priority-medium {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 2px solid #f59e0b;
+  font-weight: 600;
+}
+
+.priority-low {
+  background-color: #ecfdf5;
+  color: #15803d;
+  border: 2px solid #22c55e;
+  font-weight: 600;
+}
+
+.priority-dot-high {
+  background-color: #f87171;
+}
+
+.priority-dot-medium {
+  background-color: #f59e0b;
+}
+
+.priority-dot-low {
+  background-color: #22c55e;
+}
+
+/* Form styles */
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Grid layouts */
+.grid {
+  display: grid;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+/* Mobile Simulator - Makes desktop browser look like mobile */
+@media (min-width: 1024px) {
+  body {
+    background: #f0f0f0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 390px;
+    height: 25px;
+    background: #000;
+    border-radius: 12px 12px 0 0;
+    z-index: 1001;
+  }
+
+  body > div:first-child {
+    width: 390px;
+    min-height: 844px;
+    margin: 0;
+    border: 6px solid #000;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    background: white;
+    position: relative;
+  }
+
+  /* Ensure sidebar is hidden on mobile simulator, but allow mobile menu */
+  body > div:first-child aside:not([data-mobile-menu]) {
+    display: none !important;
+  }
+
+  /* Adjust main content for mobile simulator */
+  body > div:first-child main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Show mobile header in simulator */
+  body > div:first-child .mobile-header {
+    display: block !important;
+  }
+
+  /* Constrain floating button to mobile frame */
+  body > div:first-child .floating-action-container {
+    position: absolute !important;
+    bottom: 1rem !important;
+    right: 1rem !important;
+    max-width: calc(100% - 2rem) !important;
+  }
+
+  /* Ensure floating menu stays within bounds */
+  body > div:first-child .floating-menu {
+    right: 0 !important;
+    max-width: calc(100% - 2rem) !important;
+  }
+}
+
+/* Mobile header visibility */
+.mobile-header {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobile-header {
+    display: block !important;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Calendar styles */
+.calendar-widget {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.calendar-nav {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #6b7280;
+}
+
+.calendar-nav:hover {
+  color: #3b82f6;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  position: relative;
+  min-height: 32px;
+  padding: 2px;
+}
+
+.calendar-day.today {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.calendar-day.has-tasks {
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+}
+
+.calendar-day.has-tasks.today {
+  background-color: #2563eb;
+  border: 1px solid #1d4ed8;
+}
+
+.calendar-day-header {
+  font-weight: 600;
+  color: #6b7280;
+  padding: 0.5rem 0;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.task-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+/* Collapsible section styles */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  margin-bottom: 0.5rem;
+}
+
+.section-header:hover {
+  background-color: #f3f4f6;
+}
+
+.section-toggle {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: transform 0.2s, color 0.2s;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-toggle:hover {
+  color: #3b82f6;
+}
+
+.section-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.section-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.section-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Floating Action Button styles */
+.floating-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+.floating-button {
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-button:hover {
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+.floating-menu {
+  animation: fadeInUp 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

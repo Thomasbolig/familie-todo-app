@@ -1,0 +1,49 @@
+{
+  "name": "family-todo-app",
+  "version": "1.0.0",
+  "description": "A collaborative family todo app for managing shared projects and tasks",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "setup": "npm install && npm run db:generate && npm run db:push",
+    "db:generate": "npm run --workspace=@family-todo/database generate",
+    "db:push": "npm run --workspace=@family-todo/database push",
+    "db:studio": "npm run --workspace=@family-todo/database studio",
+    "web:dev": "npm run --workspace=@family-todo/web dev",
+    "api:dev": "npm run --workspace=@family-todo/api dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/family-todo-app.git"
+  },
+  "keywords": [
+    "todo",
+    "family",
+    "collaboration",
+    "nextjs",
+    "supabase",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

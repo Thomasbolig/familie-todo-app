@@ -1,0 +1,23 @@
+{
+  "name": "@family-todo/database",
+  "version": "1.0.0",
+  "description": "Database schema and Prisma client for family todo app",
+  "main": "index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "studio": "prisma studio",
+    "migrate": "prisma migrate dev",
+    "seed": "tsx seed.ts",
+    "reset": "prisma migrate reset",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "tsx": "^4.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

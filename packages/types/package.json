@@ -1,0 +1,14 @@
+{
+  "name": "@family-todo/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for family todo app",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

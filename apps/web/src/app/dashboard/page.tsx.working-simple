@@ -1,0 +1,237 @@
+'use client';
+
+import { useState } from 'react';
+
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+      {/* Mobile Header */}
+      <header style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 1rem' }} className="mobile-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: '600' }}>Familie TODO</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            style={{
+              padding: '0.5rem',
+              fontSize: '1.2rem',
+              background: 'none',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.5rem'
+            }}
+          >
+            ☰
+          </button>
+        </div>
+      </header>
+
+      {/* Desktop Layout */}
+      <div style={{ display: 'flex' }}>
+        {/* Sidebar */}
+        <aside data-mobile-menu="true" style={{
+          position: 'fixed',
+          top: 0,
+          left: showMobileMenu ? 0 : '-256px',
+          width: '256px',
+          height: '100vh',
+          background: 'white',
+          borderRight: '1px solid #e5e7eb',
+          padding: '1rem',
+          transition: 'left 0.3s ease',
+          zIndex: 1000
+        }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Familie TODO</h1>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Organiser familielivet</p>
+          </div>
+
+          <nav>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {[
+                { id: 'overview', label: '📊 Oversikt' },
+                { id: 'projects', label: '📁 Prosjekter' },
+                { id: 'calendar', label: '📅 Kalender' },
+                { id: 'family', label: '👨‍👩‍👧‍👦 Familie' }
+              ].map(item => (
+                <li key={item.id} style={{ marginBottom: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setShowMobileMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      border: 'none',
+                      borderRadius: '0.5rem',
+                      background: activeTab === item.id ? '#3b82f6' : 'transparent',
+                      color: activeTab === item.id ? 'white' : '#374151',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+
+        {/* Overlay for mobile menu */}
+        {showMobileMenu && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 999
+            }}
+            onClick={() => setShowMobileMenu(false)}
+          />
+        )}
+
+        {/* Main Content */}
+        <main style={{ flex: 1, padding: '1rem' }}>
+          {activeTab === 'overview' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                📊 Oversikt
+              </h1>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-4" style={{ marginBottom: '2rem' }}>
+                <div className="card">
+                  <h3 style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                    Aktive Prosjekter
+                  </h3>
+                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                    3
+                  </p>
+                </div>
+                <div className="card">
+                  <h3 style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                    Oppgaver i dag
+                  </h3>
+                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                    5
+                  </p>
+                </div>
+              </div>
+
+              {/* Simple project list */}
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>
+                  Aktive Prosjekter
+                </h2>
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  <div className="card">
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>Selge huset</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>8/12 oppgaver - 65% fullført</p>
+                  </div>
+                  <div className="card">
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>Barnehage - Emma</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>4/5 oppgaver - 90% fullført</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'projects' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                📁 Prosjekter
+              </h1>
+              <p>Prosjektfunksjonalitet kommer snart...</p>
+            </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                📅 Kalender
+              </h1>
+
+              {/* Simple filter buttons */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                    Alle barn
+                  </button>
+                  <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                    Emma
+                  </button>
+                  <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                    Oliver
+                  </button>
+                </div>
+              </div>
+
+              {/* Simple weather */}
+              <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>I dag</div>
+                    <div style={{ fontSize: '1.5rem' }}>☀️</div>
+                    <div style={{ fontSize: '0.8rem' }}>18°</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>I morgen</div>
+                    <div style={{ fontSize: '1.5rem' }}>⛅</div>
+                    <div style={{ fontSize: '0.8rem' }}>16°</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Overmorgen</div>
+                    <div style={{ fontSize: '1.5rem' }}>🌧️</div>
+                    <div style={{ fontSize: '0.8rem' }}>14°</div>
+                  </div>
+                </div>
+              </div>
+
+              <p>Komplett kalenderfunksjonalitet kommer snart...</p>
+            </div>
+          )}
+
+          {activeTab === 'family' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                👨‍👩‍👧‍👦 Familie
+              </h1>
+              <p>Familiefunksjonalitet kommer snart...</p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Simple Floating Action Button */}
+      <div style={{
+        position: 'fixed',
+        bottom: '2rem',
+        right: '2rem',
+        zIndex: 1005
+      }}>
+        <button
+          className="btn btn-primary"
+          style={{
+            width: '4rem',
+            height: '4rem',
+            borderRadius: '50%',
+            fontSize: '1.5rem',
+            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)'
+          }}
+          onClick={() => alert('Legg til funksjon kommer snart!')}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}

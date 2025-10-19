@@ -1,0 +1,4475 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+// Mock data - will be replaced with real data from Supabase
+const mockProjects = [
+  {
+    id: '1',
+    title: 'Selge huset',
+    progress: 65,
+    priority: 'high' as const,
+    tasksTotal: 12,
+    tasksCompleted: 8,
+    dueDate: '2024-12-15',
+  },
+  {
+    id: '2',
+    title: 'Selge hytte 1',
+    progress: 30,
+    priority: 'medium' as const,
+    tasksTotal: 8,
+    tasksCompleted: 2,
+    dueDate: '2024-11-30',
+  },
+  {
+    id: '3',
+    title: 'Barnehage - Emma',
+    progress: 90,
+    priority: 'low' as const,
+    tasksTotal: 5,
+    tasksCompleted: 4,
+    dueDate: null,
+  },
+];
+
+// Get today's date and calculate upcoming dates
+const getDateString = (daysFromToday: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromToday);
+  return date.toISOString().split('T')[0];
+};
+
+const mockTasks = [
+  {
+    id: '1',
+    title: 'Kontakt megler',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(0),
+    completed: false,
+  },
+  {
+    id: '2',
+    title: 'Puss opp fasade',
+    project: 'Selge huset',
+    priority: 'medium' as const,
+    dueDate: getDateString(2),
+    completed: false,
+  },
+  {
+    id: '3',
+    title: 'Pakke kasser',
+    project: 'Selge hytte 1',
+    priority: 'low' as const,
+    dueDate: getDateString(5),
+    completed: false,
+  },
+  {
+    id: '4',
+    title: 'Bestille nye bankkort',
+    project: null,
+    priority: 'high' as const,
+    dueDate: getDateString(0),
+    completed: false,
+  },
+  {
+    id: '5',
+    title: 'Oppdater adresse hos Nav',
+    project: null,
+    priority: 'medium' as const,
+    dueDate: getDateString(1),
+    completed: false,
+  },
+  {
+    id: '6',
+    title: 'Handle mat til barna',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(0),
+    completed: false,
+  },
+  {
+    id: '7',
+    title: 'Ring advokat',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(3),
+    completed: false,
+  },
+  {
+    id: '8',
+    title: 'Levere Emma i barnehagen',
+    project: 'Barnehage - Emma',
+    priority: 'medium' as const,
+    dueDate: getDateString(4),
+    completed: false,
+  },
+  // Additional tasks for first week
+  {
+    id: '9',
+    title: 'Møte med bank',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(0),
+    completed: false,
+  },
+  {
+    id: '10',
+    title: 'Rydde garasje',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(1),
+    completed: false,
+  },
+  {
+    id: '11',
+    title: 'Bestille flyttebil',
+    project: 'Selge huset',
+    priority: 'medium' as const,
+    dueDate: getDateString(1),
+    completed: false,
+  },
+  {
+    id: '12',
+    title: 'Kjøpe gaver til bursdagsfest',
+    project: null,
+    priority: 'medium' as const,
+    dueDate: getDateString(2),
+    completed: false,
+  },
+  {
+    id: '13',
+    title: 'Tannlege appointment',
+    project: null,
+    priority: 'high' as const,
+    dueDate: getDateString(2),
+    completed: false,
+  },
+  {
+    id: '14',
+    title: 'Pakke klær',
+    project: 'Selge hytte 1',
+    priority: 'low' as const,
+    dueDate: getDateString(3),
+    completed: false,
+  },
+  {
+    id: '15',
+    title: 'Levere nøkler til megler',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(4),
+    completed: false,
+  },
+  {
+    id: '16',
+    title: 'Handle til middag',
+    project: null,
+    priority: 'medium' as const,
+    dueDate: getDateString(4),
+    completed: false,
+  },
+  {
+    id: '17',
+    title: 'Signere kontrakt',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(5),
+    completed: false,
+  },
+  {
+    id: '18',
+    title: 'Planlegge helgetur',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(5),
+    completed: false,
+  },
+  // Second week activities
+  {
+    id: '19',
+    title: 'Møte med revisor',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(6),
+    completed: false,
+  },
+  {
+    id: '20',
+    title: 'Handle til helgefrokost',
+    project: null,
+    priority: 'medium' as const,
+    dueDate: getDateString(6),
+    completed: false,
+  },
+  {
+    id: '21',
+    title: 'Levere dokumenter til bank',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(7),
+    completed: false,
+  },
+  {
+    id: '22',
+    title: 'Bestille taxi til flyplassen',
+    project: null,
+    priority: 'medium' as const,
+    dueDate: getDateString(7),
+    completed: false,
+  },
+  {
+    id: '23',
+    title: 'Signere siste papirer',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(8),
+    completed: false,
+  },
+  {
+    id: '24',
+    title: 'Kjøpe gave til tante Anna',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(8),
+    completed: false,
+  },
+  {
+    id: '25',
+    title: 'Møte med nye naboer',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(9),
+    completed: false,
+  },
+  {
+    id: '26',
+    title: 'Pakke siste kasser',
+    project: 'Selge hytte 1',
+    priority: 'medium' as const,
+    dueDate: getDateString(9),
+    completed: false,
+  },
+  {
+    id: '27',
+    title: 'Avbestille bredbånd',
+    project: 'Selge huset',
+    priority: 'medium' as const,
+    dueDate: getDateString(10),
+    completed: false,
+  },
+  {
+    id: '28',
+    title: 'Lage middag til svigermor',
+    project: null,
+    priority: 'high' as const,
+    dueDate: getDateString(10),
+    completed: false,
+  },
+  {
+    id: '29',
+    title: 'Hente ut depositum',
+    project: 'Selge huset',
+    priority: 'medium' as const,
+    dueDate: getDateString(11),
+    completed: false,
+  },
+  {
+    id: '30',
+    title: 'Planlegge barnas bursdager',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(11),
+    completed: false,
+  },
+  {
+    id: '31',
+    title: 'Levere nøkler til kjøper',
+    project: 'Selge huset',
+    priority: 'high' as const,
+    dueDate: getDateString(12),
+    completed: false,
+  },
+  {
+    id: '32',
+    title: 'Kjøpe blomster til hagen',
+    project: null,
+    priority: 'low' as const,
+    dueDate: getDateString(12),
+    completed: false,
+  },
+];
+
+const mockChildren = [
+  {
+    id: '1',
+    name: 'Emma',
+    age: 6,
+    color: '#3b82f6', // Blue
+  },
+  {
+    id: '2',
+    name: 'Oliver',
+    age: 9,
+    color: '#10b981', // Green
+  },
+];
+
+// Predefined locations for easy selection
+const PREDEFINED_LOCATIONS = [
+  { name: 'Oslo', lat: 59.9139, lon: 10.7522 },
+  { name: 'Bergen', lat: 60.3913, lon: 5.3221 },
+  { name: 'Trondheim', lat: 63.4305, lon: 10.3951 },
+  { name: 'Stavanger', lat: 58.9700, lon: 5.7331 },
+  { name: 'Tromsø', lat: 69.6492, lon: 18.9553 },
+  { name: 'Kristiansand', lat: 58.1599, lon: 7.9956 },
+  { name: 'Fredrikstad', lat: 59.2181, lon: 10.9298 },
+  { name: 'Drammen', lat: 59.7439, lon: 10.2045 }
+];
+
+const mockChildActivities = [
+  // Emma's activities - first week
+  {
+    id: '1',
+    childId: '1',
+    title: 'Turn',
+    date: getDateString(0),
+    startTime: '19:30',
+    endTime: '20:30',
+    location: 'Turnhallen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '2',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(0),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '3',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(1),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '4',
+    childId: '1',
+    title: 'Svømming',
+    date: getDateString(1),
+    startTime: '17:00',
+    endTime: '18:00',
+    location: 'Svømmehallen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '5',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(2),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '6',
+    childId: '1',
+    title: 'Lekeavtale',
+    date: getDateString(2),
+    startTime: '16:30',
+    endTime: '18:00',
+    location: 'Hjemme hos Sofie',
+    recurring: 'none' as const,
+  },
+  // Oliver's activities - first week
+  {
+    id: '7',
+    childId: '2',
+    title: 'Fotball',
+    date: getDateString(0),
+    startTime: '18:00',
+    endTime: '19:30',
+    location: 'Fotballbanen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '8',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(0),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '9',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(1),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '10',
+    childId: '2',
+    title: 'Piano',
+    date: getDateString(1),
+    startTime: '15:00',
+    endTime: '16:00',
+    location: 'Kulturskolen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '11',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(2),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '12',
+    childId: '2',
+    title: 'Bursdagsfest',
+    date: getDateString(2),
+    startTime: '16:00',
+    endTime: '19:00',
+    location: 'Hjemme hos Marcus',
+    recurring: 'none' as const,
+  },
+  // Second week - Emma's activities
+  {
+    id: '13',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(3),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '14',
+    childId: '1',
+    title: 'Babysang',
+    date: getDateString(3),
+    startTime: '10:00',
+    endTime: '10:45',
+    location: 'Kulturhuset',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '15',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(4),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '16',
+    childId: '1',
+    title: 'Besøk hos bestemor',
+    date: getDateString(4),
+    startTime: '16:30',
+    endTime: '18:30',
+    location: 'Bestemors hus',
+    recurring: 'none' as const,
+  },
+  {
+    id: '17',
+    childId: '1',
+    title: 'Lekegruppe',
+    date: getDateString(5),
+    startTime: '09:30',
+    endTime: '11:00',
+    location: 'Bamsebu barnehage',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '18',
+    childId: '1',
+    title: 'Svømming',
+    date: getDateString(5),
+    startTime: '14:00',
+    endTime: '15:00',
+    location: 'Svømmehallen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '19',
+    childId: '1',
+    title: 'Turn',
+    date: getDateString(6),
+    startTime: '10:00',
+    endTime: '11:00',
+    location: 'Turnhallen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '20',
+    childId: '1',
+    title: 'Lekeavtale med Noah',
+    date: getDateString(6),
+    startTime: '14:00',
+    endTime: '16:00',
+    location: 'Lekeplassen',
+    recurring: 'none' as const,
+  },
+  {
+    id: '21',
+    childId: '1',
+    title: 'Barnehage',
+    date: getDateString(7),
+    startTime: '08:00',
+    endTime: '16:00',
+    location: 'Solsikke barnehage',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '22',
+    childId: '1',
+    title: 'Tannlege',
+    date: getDateString(7),
+    startTime: '16:30',
+    endTime: '17:00',
+    location: 'Tannklinikken',
+    recurring: 'none' as const,
+  },
+  {
+    id: '23',
+    childId: '1',
+    title: 'Svømming',
+    date: getDateString(8),
+    startTime: '17:00',
+    endTime: '18:00',
+    location: 'Svømmehallen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '24',
+    childId: '1',
+    title: 'Filmkveld med papa',
+    date: getDateString(8),
+    startTime: '19:00',
+    endTime: '21:00',
+    location: 'Hjemme',
+    recurring: 'none' as const,
+  },
+  // Second week - Oliver's activities
+  {
+    id: '25',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(3),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '26',
+    childId: '2',
+    title: 'Matematikk-hjelp',
+    date: getDateString(3),
+    startTime: '15:00',
+    endTime: '16:00',
+    location: 'Leksehjelprommet',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '27',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(4),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '28',
+    childId: '2',
+    title: 'Besøk hos bestemor',
+    date: getDateString(4),
+    startTime: '16:30',
+    endTime: '18:30',
+    location: 'Bestemors hus',
+    recurring: 'none' as const,
+  },
+  {
+    id: '29',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(5),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '30',
+    childId: '2',
+    title: 'Fotballtrening',
+    date: getDateString(5),
+    startTime: '15:30',
+    endTime: '17:00',
+    location: 'Fotballbanen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '31',
+    childId: '2',
+    title: 'Fritidsklubben',
+    date: getDateString(6),
+    startTime: '10:00',
+    endTime: '15:00',
+    location: 'Kulturhuset',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '32',
+    childId: '2',
+    title: 'Kino med venner',
+    date: getDateString(6),
+    startTime: '16:00',
+    endTime: '18:30',
+    location: 'Kino1',
+    recurring: 'none' as const,
+  },
+  {
+    id: '33',
+    childId: '2',
+    title: 'Skole',
+    date: getDateString(7),
+    startTime: '08:30',
+    endTime: '14:00',
+    location: 'Rosenvangen skole',
+    recurring: 'daily' as const,
+  },
+  {
+    id: '34',
+    childId: '2',
+    title: 'Gitartime',
+    date: getDateString(7),
+    startTime: '16:00',
+    endTime: '17:00',
+    location: 'Musikkskolen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '35',
+    childId: '2',
+    title: 'Piano',
+    date: getDateString(8),
+    startTime: '15:00',
+    endTime: '16:00',
+    location: 'Kulturskolen',
+    recurring: 'weekly' as const,
+  },
+  {
+    id: '36',
+    childId: '2',
+    title: 'Spillkveld med familie',
+    date: getDateString(8),
+    startTime: '19:00',
+    endTime: '21:00',
+    location: 'Hjemme',
+    recurring: 'none' as const,
+  },
+];
+
+// Parents data
+const mockParents = [
+  {
+    id: 'mother',
+    name: 'Mor',
+    fullName: 'Anne Larsen',
+    color: '#ec4899', // Pink
+    email: 'anne@example.com',
+  },
+  {
+    id: 'father',
+    name: 'Far',
+    fullName: 'Lars Andersen',
+    color: '#3b82f6', // Blue
+    email: 'lars@example.com',
+  }
+];
+
+// Custody schedule patterns
+const mockCustodySchedule = [
+  // Emma - alternating weeks starting with mother
+  {
+    id: 'custody-emma-1',
+    childId: '1',
+    parentId: 'mother',
+    pattern: 'alternating-weeks',
+    startDate: getDateString(-7), // Last week
+    endDate: getDateString(-1),
+    notes: 'Uke hos mor'
+  },
+  {
+    id: 'custody-emma-2',
+    childId: '1',
+    parentId: 'father',
+    pattern: 'alternating-weeks',
+    startDate: getDateString(0), // This week
+    endDate: getDateString(6),
+    notes: 'Uke hos far'
+  },
+  {
+    id: 'custody-emma-3',
+    childId: '1',
+    parentId: 'mother',
+    pattern: 'alternating-weeks',
+    startDate: getDateString(7), // Next week
+    endDate: getDateString(13),
+    notes: 'Uke hos mor'
+  },
+  // Oliver - every other weekend + Wednesday with father
+  {
+    id: 'custody-oliver-1',
+    childId: '2',
+    parentId: 'mother',
+    pattern: 'primary-with-visits',
+    startDate: getDateString(-30),
+    endDate: getDateString(30),
+    notes: 'Primærbosted hos mor'
+  },
+  {
+    id: 'custody-oliver-weekend-1',
+    childId: '2',
+    parentId: 'father',
+    pattern: 'every-other-weekend',
+    startDate: getDateString(-1), // Saturday
+    endDate: getDateString(1), // Sunday
+    notes: 'Helg hos far'
+  },
+  {
+    id: 'custody-oliver-wednesday',
+    childId: '2',
+    parentId: 'father',
+    pattern: 'weekly-visits',
+    startDate: getDateString(2), // Wednesday
+    endDate: getDateString(2),
+    notes: 'Onsdagsbesøk hos far'
+  }
+];
+
+// Transfer checklists - permanent items
+const mockPermanentChecklist = [
+  {
+    id: 'perm-1',
+    item: 'Kosedyr',
+    childId: 'all', // Applies to all children
+    category: 'comfort'
+  },
+  {
+    id: 'perm-2',
+    item: 'Medisiner',
+    childId: 'all',
+    category: 'health'
+  },
+  {
+    id: 'perm-3',
+    item: 'Skolebok og lekser',
+    childId: 'all',
+    category: 'school'
+  },
+  {
+    id: 'perm-4',
+    item: 'Fotballsko og drakt',
+    childId: '2', // Oliver specific
+    category: 'activities'
+  },
+  {
+    id: 'perm-5',
+    item: 'Dansesko',
+    childId: '1', // Emma specific
+    category: 'activities'
+  }
+];
+
+// One-time transfer items
+const mockOneTimeChecklist = [
+  {
+    id: 'onetime-1',
+    item: 'Vinterjakkke - vokst ut av sin',
+    childId: '1',
+    transferDate: getDateString(0),
+    fromParent: 'mother',
+    toParent: 'father',
+    completed: false,
+    priority: 'medium' as const
+  },
+  {
+    id: 'onetime-2',
+    item: 'Nye fotballsko str 38',
+    childId: '2',
+    transferDate: getDateString(2),
+    fromParent: 'father',
+    toParent: 'mother',
+    completed: false,
+    priority: 'high' as const
+  },
+  {
+    id: 'onetime-3',
+    item: 'Bursdagsgave fra bestemor',
+    childId: '1',
+    transferDate: getDateString(7),
+    fromParent: 'mother',
+    toParent: 'father',
+    completed: false,
+    priority: 'low' as const
+  }
+];
+
+// Holiday exceptions and special periods
+const mockHolidayExceptions = [
+  {
+    id: 'holiday-1',
+    name: 'Juleferie',
+    startDate: '2024-12-23',
+    endDate: '2025-01-02',
+    custodyParent: 'mother',
+    recurring: 'yearly',
+    notes: 'Mor har barna på juleferie'
+  },
+  {
+    id: 'holiday-2',
+    name: 'Påskeferie',
+    startDate: '2025-03-24',
+    endDate: '2025-04-01',
+    custodyParent: 'father',
+    recurring: 'yearly',
+    notes: 'Far har barna på påskeferie'
+  },
+  {
+    id: 'holiday-3',
+    name: 'Sommerferie - første halvdel',
+    startDate: '2025-06-30',
+    endDate: '2025-07-21',
+    custodyParent: 'mother',
+    recurring: 'yearly',
+    notes: 'Mor har barna første 3 uker av sommeren'
+  },
+  {
+    id: 'holiday-4',
+    name: 'Sommerferie - andre halvdel',
+    startDate: '2025-07-22',
+    endDate: '2025-08-10',
+    custodyParent: 'father',
+    recurring: 'yearly',
+    notes: 'Far har barna siste 3 uker av sommeren'
+  },
+  {
+    id: 'holiday-5',
+    name: 'Høstferie',
+    startDate: '2025-10-06',
+    endDate: '2025-10-10',
+    custodyParent: 'father',
+    recurring: 'yearly',
+    notes: 'Far har barna på høstferie'
+  }
+];
+
+// Rotation periods - longer term custody rotations
+const mockRotationPeriods = [
+  {
+    id: 'rotation-1',
+    name: 'Standard samværsturnus',
+    pattern: 'alternating-weeks',
+    startDate: '2024-09-01',
+    endDate: '2024-12-22', // Until Christmas
+    startingParent: 'mother',
+    weekDuration: 1, // 1 week rotations
+    notes: 'Normal turnus frem til jul'
+  },
+  {
+    id: 'rotation-2',
+    name: 'Vinter samværsturnus',
+    pattern: 'alternating-weeks',
+    startDate: '2025-01-03', // After New Year
+    endDate: '2025-03-23', // Until Easter
+    startingParent: 'father',
+    weekDuration: 1,
+    notes: 'Normal turnus etter nyttår'
+  },
+  {
+    id: 'rotation-3',
+    name: 'Vår samværsturnus',
+    pattern: 'alternating-weeks',
+    startDate: '2025-04-02', // After Easter
+    endDate: '2025-06-29', // Until summer vacation
+    startingParent: 'mother',
+    weekDuration: 1,
+    notes: 'Normal turnus frem til sommerferie'
+  },
+  {
+    id: 'rotation-4',
+    name: 'Høst samværsturnus',
+    pattern: 'alternating-weeks',
+    startDate: '2025-08-11', // After summer vacation
+    endDate: '2025-12-22', // Until next Christmas
+    startingParent: 'father',
+    weekDuration: 1,
+    notes: 'Normal turnus etter sommerferie'
+  }
+];
+
+// Parent activities/appointments
+const mockParentActivities = [
+  {
+    id: 'parent-1',
+    parentId: 'mother',
+    title: 'Foreldremøte - Emma',
+    date: getDateString(3),
+    startTime: '18:00',
+    endTime: '19:30',
+    location: 'Dansen Barneskole',
+    type: 'meeting',
+    childrenInvolved: ['1']
+  },
+  {
+    id: 'parent-2',
+    parentId: 'father',
+    title: 'Lege - Oliver kontroll',
+    date: getDateString(5),
+    startTime: '14:30',
+    endTime: '15:15',
+    location: 'Barnelegepraksis',
+    type: 'appointment',
+    childrenInvolved: ['2']
+  },
+  {
+    id: 'parent-3',
+    parentId: 'mother',
+    title: 'Jobbmøte',
+    date: getDateString(1),
+    startTime: '09:00',
+    endTime: '11:00',
+    location: 'Kontoret',
+    type: 'work',
+    childrenInvolved: []
+  }
+];
+
+const priorityColors = {
+  high: 'priority-dot-high',
+  medium: 'priority-dot-medium',
+  low: 'priority-dot-low',
+};
+
+const priorityBadgeColors = {
+  high: 'priority-high',
+  medium: 'priority-medium',
+  low: 'priority-low',
+};
+
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newProject, setNewProject] = useState({ title: '', priority: 'medium', dueDate: '' });
+  const [newTask, setNewTask] = useState({ title: '', project: '', priority: 'medium', dueDate: '' });
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState({
+    upcomingTasks: true, // Start expanded since it's the most important
+    projects: false,
+    standaloneTasks: false,
+    childrenCalendar: true
+  });
+  const [upcomingTasksFilter, setUpcomingTasksFilter] = useState<'1day' | '3days' | '1week'>('3days');
+  const [childrenCalendarFilter, setChildrenCalendarFilter] = useState<'1day' | '3days' | '1week'>('3days');
+  const [selectedChildFilter, setSelectedChildFilter] = useState<string>('all'); // 'all' or child ID
+  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
+  const [handPreference, setHandPreference] = useState<'left' | 'right'>('left');
+  const [showNewChildActivityModal, setShowNewChildActivityModal] = useState(false);
+  const [newChildActivity, setNewChildActivity] = useState({
+    title: '',
+    childId: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    location: '',
+    recurring: 'none' as 'none' | 'daily' | 'weekly'
+  });
+  const [selectedActivity, setSelectedActivity] = useState<typeof mockChildActivities[0] | null>(null);
+  const [selectedTask, setSelectedTask] = useState<typeof mockTasks[0] | null>(null);
+  const [isNearBottom, setIsNearBottom] = useState(false);
+  const [selectedParentFilter, setSelectedParentFilter] = useState<string>('all');
+  const [showCustodyConfig, setShowCustodyConfig] = useState(false);
+  const [custodyPattern, setCustodyPattern] = useState<'alternating-weeks' | 'every-other-weekend' | 'weekdays-mother-weekends-father' | 'custom'>('alternating-weeks');
+  const [custodyStartDate, setCustodyStartDate] = useState('2024-09-23');
+  const [custodyStartWith, setCustodyStartWith] = useState<'mother' | 'father'>('mother');
+  const [customWeeklyPattern, setCustomWeeklyPattern] = useState([
+    { day: 'monday', parent: 'mother' as 'mother' | 'father' | 'shared' },
+    { day: 'tuesday', parent: 'mother' as 'mother' | 'father' | 'shared' },
+    { day: 'wednesday', parent: 'mother' as 'mother' | 'father' | 'shared' },
+    { day: 'thursday', parent: 'mother' as 'mother' | 'father' | 'shared' },
+    { day: 'friday', parent: 'father' as 'mother' | 'father' | 'shared' },
+    { day: 'saturday', parent: 'father' as 'mother' | 'father' | 'shared' },
+    { day: 'sunday', parent: 'father' as 'mother' | 'father' | 'shared' }
+  ]);
+  const [rotationWeeks, setRotationWeeks] = useState(2);
+  const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
+  const [showTransferChecklist, setShowTransferChecklist] = useState(false);
+  const [transferChecklists, setTransferChecklists] = useState({
+    permanent: [
+      { id: 1, item: 'Klær til 3 dager', checked: false, category: 'clothes' },
+      { id: 2, item: 'Tannbørste og tannkrem', checked: false, category: 'hygiene' },
+      { id: 3, item: 'Sovebamse', checked: false, category: 'comfort' },
+      { id: 4, item: 'Lekser og skolebøker', checked: false, category: 'school' },
+      { id: 5, item: 'Medisiner (hvis aktuelt)', checked: false, category: 'health' }
+    ],
+    thisTime: [
+      { id: 6, item: 'Nye fotballsko (str 38)', checked: false, category: 'clothes' },
+      { id: 7, item: 'Bursdagsinvitasjon fra Emma', checked: false, category: 'other' }
+    ],
+    activities: [
+      { id: 8, item: 'Fotballsko', checked: false, category: 'sports' },
+      { id: 9, item: 'Drakt og sokker', checked: false, category: 'sports' },
+      { id: 10, item: 'Vannflaske', checked: false, category: 'sports' }
+    ]
+  });
+
+  // User location for weather
+  const [userLocation, setUserLocation] = useState({
+    name: 'Oslo',
+    lat: 59.9139,
+    lon: 10.7522
+  });
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // Setup/Administration system state
+  const [familyMembers, setFamilyMembers] = useState([
+    { id: 'user-1', name: 'Anne Larsen', role: 'mother', email: 'anne@example.com', isCurrentUser: true },
+    { id: 'user-2', name: 'Lars Andersen', role: 'father', email: 'lars@example.com', isCurrentUser: false },
+    { id: 'child-1', name: 'Emma Larsen', role: 'child', age: 12, parentIds: ['user-1', 'user-2'] },
+    { id: 'child-2', name: 'Oliver Larsen', role: 'child', age: 8, parentIds: ['user-1', 'user-2'] }
+  ]);
+  const [checklistTemplates, setChecklistTemplates] = useState({
+    permanent: mockPermanentChecklist,
+    templates: [
+      { id: 'template-1', name: 'Helgetur', items: ['Klær til 2 dager', 'Tannbørste', 'Medisiner', 'Kosedyr'] },
+      { id: 'template-2', name: 'Skoluke', items: ['Klær til 5 dager', 'Skolebøker', 'PC/iPad', 'Lunsjpenger'] }
+    ]
+  });
+  const [setupActiveTab, setSetupActiveTab] = useState('family');
+
+  // Family member management modals state
+  const [showAddFamilyMemberModal, setShowAddFamilyMemberModal] = useState(false);
+  const [showEditFamilyMemberModal, setShowEditFamilyMemberModal] = useState(false);
+  const [editingFamilyMember, setEditingFamilyMember] = useState(null);
+  const [newFamilyMember, setNewFamilyMember] = useState({
+    name: '',
+    role: 'child',
+    email: '',
+    age: '',
+    parentIds: []
+  });
+
+  // Family member management functions
+  const handleAddFamilyMember = () => {
+    const newMember = {
+      id: `member-${Date.now()}`,
+      name: newFamilyMember.name,
+      role: newFamilyMember.role,
+      email: newFamilyMember.email,
+      ...(newFamilyMember.role === 'child' && { age: parseInt(newFamilyMember.age) }),
+      ...(newFamilyMember.role === 'child' && { parentIds: newFamilyMember.parentIds }),
+      ...(newFamilyMember.role !== 'child' && { isCurrentUser: false })
+    };
+
+    setFamilyMembers([...familyMembers, newMember]);
+    setNewFamilyMember({ name: '', role: 'child', email: '', age: '', parentIds: [] });
+    setShowAddFamilyMemberModal(false);
+  };
+
+  const handleEditFamilyMember = () => {
+    if (!editingFamilyMember) return;
+
+    const updatedMembers = familyMembers.map(member =>
+      member.id === editingFamilyMember.id ? editingFamilyMember : member
+    );
+
+    setFamilyMembers(updatedMembers);
+    setEditingFamilyMember(null);
+    setShowEditFamilyMemberModal(false);
+  };
+
+  const handleDeleteFamilyMember = (memberId: string) => {
+    setFamilyMembers(familyMembers.filter(member => member.id !== memberId));
+  };
+
+  const getParentOptions = () => {
+    return familyMembers.filter(member => member.role === 'mother' || member.role === 'father');
+  };
+
+  // Checklist management state and functions
+  const [showAddChecklistItemModal, setShowAddChecklistItemModal] = useState(false);
+  const [showAddTemplateModal, setShowAddTemplateModal] = useState(false);
+  const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [newTemplate, setNewTemplate] = useState({ name: '', items: [''] });
+
+  const handleAddPermanentItem = () => {
+    if (!newChecklistItem.trim()) return;
+
+    const newItem = {
+      id: `permanent-${Date.now()}`,
+      item: newChecklistItem.trim(),
+      category: 'clothes'
+    };
+
+    setTransferChecklists({
+      ...transferChecklists,
+      permanent: [...transferChecklists.permanent, newItem]
+    });
+
+    setNewChecklistItem('');
+    setShowAddChecklistItemModal(false);
+  };
+
+  const handleRemovePermanentItem = (itemId: string) => {
+    setTransferChecklists({
+      ...transferChecklists,
+      permanent: transferChecklists.permanent.filter(item => item.id !== itemId)
+    });
+  };
+
+  const handleAddTemplate = () => {
+    if (!newTemplate.name.trim()) return;
+
+    const template = {
+      id: `template-${Date.now()}`,
+      name: newTemplate.name.trim(),
+      items: newTemplate.items.filter(item => item.trim() !== '')
+    };
+
+    setChecklistTemplates({
+      ...checklistTemplates,
+      templates: [...checklistTemplates.templates, template]
+    });
+
+    setNewTemplate({ name: '', items: [''] });
+    setShowAddTemplateModal(false);
+  };
+
+  const handleEditTemplate = () => {
+    if (!editingTemplate || !editingTemplate.name.trim()) return;
+
+    const updatedTemplates = checklistTemplates.templates.map(template =>
+      template.id === editingTemplate.id ? {
+        ...editingTemplate,
+        items: editingTemplate.items.filter(item => item.trim() !== '')
+      } : template
+    );
+
+    setChecklistTemplates({
+      ...checklistTemplates,
+      templates: updatedTemplates
+    });
+
+    setEditingTemplate(null);
+    setShowEditTemplateModal(false);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    setChecklistTemplates({
+      ...checklistTemplates,
+      templates: checklistTemplates.templates.filter(template => template.id !== templateId)
+    });
+  };
+
+  // Holiday exceptions and rotation periods management
+  const [showHolidayExceptionsModal, setShowHolidayExceptionsModal] = useState(false);
+  const [showRotationPeriodsModal, setShowRotationPeriodsModal] = useState(false);
+  const [holidayExceptions, setHolidayExceptions] = useState(mockHolidayExceptions);
+  const [rotationPeriods, setRotationPeriods] = useState(mockRotationPeriods);
+
+  // Helper function to check if date falls in holiday exception
+  const getHolidayException = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return holidayExceptions.find(holiday =>
+      dateStr >= holiday.startDate && dateStr <= holiday.endDate
+    );
+  };
+
+  // Helper function to get active rotation period for a date
+  const getActiveRotationPeriod = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return rotationPeriods.find(period =>
+      dateStr >= period.startDate && dateStr <= period.endDate
+    );
+  };
+
+  // Helper function to determine custody for a date
+  const getCustodyParent = (date: Date): 'mother' | 'father' => {
+    // First check for holiday exceptions - these override everything
+    const holidayException = getHolidayException(date);
+    if (holidayException) {
+      return holidayException.custodyParent as 'mother' | 'father';
+    }
+
+    // Next check for active rotation period
+    const rotationPeriod = getActiveRotationPeriod(date);
+    if (rotationPeriod) {
+      // Use the rotation period's settings
+      const periodReferenceDate = new Date(rotationPeriod.startDate);
+      const daysDiff = Math.floor((date.getTime() - periodReferenceDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (rotationPeriod.pattern === 'alternating-weeks') {
+        const weeksDiff = Math.floor(daysDiff / (7 * rotationPeriod.weekDuration));
+        const isEvenWeek = weeksDiff % 2 === 0;
+        return isEvenWeek ? rotationPeriod.startingParent as 'mother' | 'father' :
+               (rotationPeriod.startingParent === 'mother' ? 'father' : 'mother');
+      }
+    }
+
+    // Fall back to default custody pattern
+    const referenceDate = new Date(custodyStartDate);
+    const daysDiff = Math.floor((date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    switch (custodyPattern) {
+      case 'custom': {
+        // Get which week we're in within the rotation cycle
+        const weeksDiff = Math.floor(daysDiff / 7);
+        const weekInCycle = weeksDiff % rotationWeeks;
+
+        // Get day of week (0=Sunday, 1=Monday, etc.)
+        const dayOfWeek = date.getDay();
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = dayNames[dayOfWeek];
+
+        // Find the pattern for this day
+        const dayPattern = customWeeklyPattern.find(p => p.day === dayName);
+        if (!dayPattern) return custodyStartWith;
+
+        // For rotation, alternate the parent based on week in cycle
+        if (weekInCycle % 2 === 0) {
+          return dayPattern.parent === 'shared' ? custodyStartWith : dayPattern.parent;
+        } else {
+          // Flip for alternate weeks
+          if (dayPattern.parent === 'mother') return 'father';
+          if (dayPattern.parent === 'father') return 'mother';
+          return custodyStartWith === 'mother' ? 'father' : 'mother';
+        }
+      }
+
+      case 'alternating-weeks': {
+        const weeksDiff = Math.floor(daysDiff / 7);
+        const isEvenWeek = weeksDiff % 2 === 0;
+        return isEvenWeek ? custodyStartWith : (custodyStartWith === 'mother' ? 'father' : 'mother');
+      }
+
+      case 'every-other-weekend': {
+        const dayOfWeek = date.getDay(); // 0=Sunday, 5=Friday, 6=Saturday
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
+
+        if (!isWeekend) {
+          return 'mother'; // Weekdays always with mother
+        }
+
+        // For weekends, check which weekend cycle we're in
+        const weeksDiff = Math.floor(daysDiff / 7);
+        const isEvenWeek = weeksDiff % 2 === 0;
+        return isEvenWeek ? custodyStartWith : (custodyStartWith === 'mother' ? 'father' : 'mother');
+      }
+
+      case 'weekdays-mother-weekends-father': {
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Saturday and Sunday
+        return isWeekend ? 'father' : 'mother';
+      }
+
+      default:
+        return custodyStartWith;
+    }
+  };
+
+  // Handler functions
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Oppretter nytt prosjekt:', newProject);
+    alert(`Nytt prosjekt opprettet: ${newProject.title}`);
+    setNewProject({ title: '', priority: 'medium', dueDate: '' });
+    setShowNewProjectModal(false);
+  };
+
+  const handleCreateTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Oppretter ny oppgave:', newTask);
+    alert(`Ny oppgave opprettet: ${newTask.title}`);
+    setNewTask({ title: '', project: '', priority: 'medium', dueDate: '' });
+    setShowNewTaskModal(false);
+  };
+
+  const handleCreateChildActivity = (e: React.FormEvent) => {
+    e.preventDefault();
+    const child = mockChildren.find(c => c.id === newChildActivity.childId);
+    console.log('Oppretter ny barneaktivitet:', newChildActivity);
+
+    const recurringText = newChildActivity.recurring === 'none' ? 'engangshendelse' :
+                         newChildActivity.recurring === 'daily' ? 'daglig gjentagelse' :
+                         'ukentlig gjentagelse';
+
+    alert(`Ny aktivitet opprettet for ${child?.name}: ${newChildActivity.title} (${recurringText})`);
+    setNewChildActivity({
+      title: '',
+      childId: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      location: '',
+      recurring: 'none'
+    });
+    setShowNewChildActivityModal(false);
+  };
+
+  // Calendar utility functions
+  const getMonthName = (date: Date) => {
+    const months = ['Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni',
+                   'Juli', 'August', 'September', 'Oktober', 'November', 'Desember'];
+    return months[date.getMonth()];
+  };
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  const getTasksForDate = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return mockTasks.filter(task => task.dueDate === dateStr);
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1);
+      } else {
+        newDate.setMonth(prev.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const toggleSection = (section: 'upcomingTasks' | 'projects' | 'standaloneTasks' | 'childrenCalendar') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Filter tasks by upcoming period
+  const getUpcomingTasks = () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    let endDate: Date;
+    switch (upcomingTasksFilter) {
+      case '1day':
+        endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        break;
+      case '3days':
+        endDate = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+        break;
+      case '1week':
+        endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        break;
+    }
+
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    return mockTasks.filter(task => {
+      if (!task.dueDate || task.completed) return false;
+      return task.dueDate >= todayStr && task.dueDate <= endDateStr;
+    }).sort((a, b) => {
+      // Sort by due date first, then by priority
+      if (a.dueDate !== b.dueDate) {
+        return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
+      }
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
+  };
+
+  const handleFloatingAction = (type: 'project' | 'task' | 'childActivity') => {
+    if (type === 'project') {
+      setShowNewProjectModal(true);
+    } else if (type === 'task') {
+      setShowNewTaskModal(true);
+    } else {
+      setShowNewChildActivityModal(true);
+    }
+    setShowFloatingMenu(false);
+  };
+
+  // Stats calculation
+  const stats = {
+    totalProjects: mockProjects.length,
+    activeProjects: mockProjects.filter(p => p.progress < 100).length,
+    tasksToday: mockTasks.filter(t => {
+      const today = new Date().toISOString().split('T')[0];
+      return t.dueDate === today;
+    }).length,
+    overdueTasks: mockTasks.filter(t => {
+      const today = new Date().toISOString().split('T')[0];
+      return t.dueDate && t.dueDate < today && !t.completed;
+    }).length,
+    standaloneTasks: mockTasks.filter(t => !t.project).length,
+    projectTasks: mockTasks.filter(t => t.project).length,
+  };
+
+  // Scroll detection for smart floating button positioning
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Check if we're near the bottom (within 150px of the bottom)
+      const nearBottom = scrollTop + windowHeight >= documentHeight - 150;
+      setIsNearBottom(nearBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const upcomingTasks = getUpcomingTasks();
+
+  // Filter family activities by time period, child, and parent
+  const getFilteredFamilyActivities = () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    let endDate: Date;
+    switch (childrenCalendarFilter) {
+      case '1day':
+        endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        break;
+      case '3days':
+        endDate = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+        break;
+      case '1week':
+        endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        break;
+    }
+
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Filter child activities
+    let filteredChildActivities = mockChildActivities.filter(activity => {
+      return activity.date >= todayStr && activity.date <= endDateStr;
+    });
+
+    if (selectedChildFilter !== 'all') {
+      filteredChildActivities = filteredChildActivities.filter(activity =>
+        activity.childId === selectedChildFilter
+      );
+    }
+
+    // Filter parent activities
+    let filteredParentActivities = mockParentActivities.filter(activity => {
+      return activity.date >= todayStr && activity.date <= endDateStr;
+    });
+
+    if (selectedParentFilter !== 'all') {
+      filteredParentActivities = filteredParentActivities.filter(activity =>
+        activity.parentId === selectedParentFilter
+      );
+    }
+
+    // Get custody schedules for the time period
+    const custodySchedules = mockCustodySchedule.filter(schedule => {
+      return schedule.startDate <= endDateStr && schedule.endDate >= todayStr;
+    });
+
+    // Get transfer checklist reminders
+    const transferReminders = mockOneTimeChecklist.filter(item => {
+      const transferDate = new Date(item.transferDate);
+      const reminderDate = new Date(transferDate.getTime() - 2 * 24 * 60 * 60 * 1000); // 2 days before
+      return reminderDate.toISOString().split('T')[0] >= todayStr &&
+             reminderDate.toISOString().split('T')[0] <= endDateStr;
+    });
+
+    return {
+      childActivities: filteredChildActivities,
+      parentActivities: filteredParentActivities,
+      custodySchedules,
+      transferReminders
+    };
+  };
+
+  // Helper function to get custody for a specific child on a specific date
+  const getChildCustodyForDate = (childId: string, date: string) => {
+    const custody = mockCustodySchedule.find(schedule =>
+      schedule.childId === childId &&
+      schedule.startDate <= date &&
+      schedule.endDate >= date
+    );
+    return custody;
+  };
+
+  const familyActivities = getFilteredFamilyActivities();
+  const filteredChildActivities = familyActivities.childActivities;
+
+  // Get weather data for selected time period
+  const getWeatherDays = () => {
+    switch (childrenCalendarFilter) {
+      case '1day': return 1;
+      case '3days': return 3;
+      case '1week': return 7;
+      default: return 3;
+    }
+  };
+
+  // Weather data with user location
+  const getWeatherForDays = (days: number) => {
+    // For now, using mock data with user location info
+    // TODO: Replace with real API call to yr.no or OpenWeatherMap
+    // Example: https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${userLocation.lat}&lon=${userLocation.lon}
+
+    const weatherIcons = ['☀️', '⛅', '🌧️', '🌦️', '🌤️', '🌩️', '❄️'];
+    const weatherLabels = ['Sol', 'Delvis overskyet', 'Regn', 'Regnbyger', 'Litt skyet', 'Tordenvær', 'Snø'];
+
+    const result = [];
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const weatherIndex = (i + Math.floor(Date.now() / (1000 * 60 * 60 * 24))) % weatherIcons.length;
+
+      result.push({
+        date: date.toISOString().split('T')[0],
+        icon: weatherIcons[weatherIndex],
+        label: `${weatherLabels[weatherIndex]} i ${userLocation.name}`,
+        temp: Math.round(15 + Math.sin(i * 0.5) * 5) // Mock temperature variation
+      });
+    }
+    return result;
+  };
+
+  const weatherData = getWeatherForDays(getWeatherDays());
+
+  const handleActivityClick = (activity: typeof mockChildActivities[0]) => {
+    setSelectedActivity(activity);
+  };
+
+  const handleTaskClick = (task: typeof mockTasks[0]) => {
+    setSelectedTask(task);
+  };
+
+  const handleStatsCardClick = (cardType: 'activeProjects' | 'tasksToday' | 'overdueTasks' | 'standaloneTasks') => {
+    // Expand the relevant section and scroll to it
+    switch (cardType) {
+      case 'activeProjects':
+        setExpandedSections(prev => ({ ...prev, projects: true }));
+        break;
+      case 'standaloneTasks':
+        setExpandedSections(prev => ({ ...prev, standaloneTasks: true }));
+        break;
+      case 'tasksToday':
+      case 'overdueTasks':
+        // For today's and overdue tasks, expand the upcoming tasks section
+        setExpandedSections(prev => ({ ...prev, upcomingTasks: true }));
+        break;
+    }
+
+    // Scroll to the relevant section after a short delay to allow state update
+    setTimeout(() => {
+      const sectionMap = {
+        activeProjects: 'projects',
+        standaloneTasks: 'standaloneTasks',
+        tasksToday: 'upcoming-tasks',
+        overdueTasks: 'upcoming-tasks'
+      };
+
+      const element = document.querySelector(`[data-section="${sectionMap[cardType]}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+      {/* Mobile Header */}
+      <header style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 1rem' }} className="mobile-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: '600' }}>Familie TODO</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            style={{
+              padding: '0.5rem',
+              fontSize: '1.2rem',
+              position: 'relative'
+            }}
+            title="Trykk for å åpne menyen"
+          >
+            ☰
+            {!showMobileMenu && (
+              <span style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                background: '#3b82f6',
+                color: 'white',
+                borderRadius: '50%',
+                width: '16px',
+                height: '16px',
+                fontSize: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'pulse 2s infinite'
+              }}>
+                •
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      <div style={{ display: 'flex' }}>
+        {/* Sidebar */}
+        <aside data-mobile-menu="true" style={{
+          position: 'fixed',
+          top: 0,
+          left: showMobileMenu ? 0 : '-256px',
+          width: '256px',
+          height: '100vh',
+          background: 'white',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          transform: 'translateX(0)',
+          transition: 'left 0.2s ease-in-out',
+          zIndex: 10000
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Logo */}
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#111827' }}>Familie TODO</h2>
+            </div>
+
+            {/* Navigation */}
+            <nav style={{ flex: 1, padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button
+                className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setActiveTab('overview');
+                  setShowMobileMenu(false);
+                  // Scroll to top
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                🏠 Oversikt
+              </button>
+              <button
+                className={`btn ${activeTab === 'projects' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setActiveTab('projects');
+                  setShowMobileMenu(false);
+                  setExpandedSections(prev => ({ ...prev, projects: true }));
+                  // Scroll to projects section
+                  setTimeout(() => {
+                    const element = document.querySelector('[data-section="projects"]');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                ✅ Prosjekter
+              </button>
+              <button
+                className={`btn ${activeTab === 'calendar' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setActiveTab('calendar');
+                  setShowMobileMenu(false);
+                  setExpandedSections(prev => ({ ...prev, childrenCalendar: true }));
+                  // Scroll to children's calendar section
+                  setTimeout(() => {
+                    const element = document.querySelector('[data-section="children-calendar"]');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                📅 Kalender
+              </button>
+              <button
+                className={`btn ${activeTab === 'family' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setActiveTab('family');
+                  setShowMobileMenu(false);
+                  setExpandedSections(prev => ({ ...prev, childrenCalendar: true }));
+                  // Scroll to children's calendar section
+                  setTimeout(() => {
+                    const element = document.querySelector('[data-section="children-calendar"]');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                👥 Familie
+              </button>
+              <button
+                className={`btn ${activeTab === 'setup' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setActiveTab('setup');
+                  setShowMobileMenu(false);
+                  // Scroll to top
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                ⚙️ Oppsett
+              </button>
+            </nav>
+
+            {/* User Section */}
+            <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ justifyContent: 'flex-start', width: '100%' }}
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  setShowLocationModal(true);
+                }}
+              >
+                🌍 Endre lokasjon ({userLocation.name})
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Overlay for mobile menu */}
+        {showMobileMenu && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 9998
+            }}
+            onClick={() => setShowMobileMenu(false)}
+          />
+        )}
+
+        {/* Main Content */}
+        <main style={{ flex: 1, marginLeft: '256px', position: 'relative' }}>
+          <div style={{ padding: '1rem' }}>
+            {/* Setup/Administration Section */}
+            {activeTab === 'setup' && (
+              <div>
+                <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                  ⚙️ Familie Oppsett
+                </h1>
+
+                {/* Setup Navigation Tabs */}
+                <div style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  marginBottom: '2rem',
+                  borderBottom: '1px solid #e5e7eb',
+                  paddingBottom: '1rem'
+                }}>
+                  {[
+                    { id: 'family', label: '👥 Familie', icon: '👥' },
+                    { id: 'custody', label: '📅 Samvær', icon: '📅' },
+                    { id: 'checklists', label: '📝 Sjekklister', icon: '📝' },
+                    { id: 'notifications', label: '🔔 Påminnelser', icon: '🔔' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      className={`btn ${setupActiveTab === tab.id ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setSetupActiveTab(tab.id)}
+                      style={{ minWidth: '120px' }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Setup Content */}
+                <div className="card" style={{ padding: '2rem' }}>
+                  {setupActiveTab === 'family' && (
+                    <div>
+                      <h2 style={{ marginBottom: '1.5rem' }}>👥 Familiemedlemmer</h2>
+                      <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+                        Administrer familiemedlemmer, roller og forbindelser.
+                      </p>
+
+                      {/* Family Members List */}
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        {familyMembers.map(member => (
+                          <div key={member.id} className="card" style={{
+                            padding: '1rem',
+                            backgroundColor: member.isCurrentUser ? '#eff6ff' : '#f9fafb'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <h4 style={{ margin: 0, marginBottom: '0.25rem' }}>
+                                  {member.name} {member.isCurrentUser && '(Du)'}
+                                </h4>
+                                <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                                  {member.role === 'mother' ? 'Mor' :
+                                   member.role === 'father' ? 'Far' :
+                                   `Barn (${member.age} år)`}
+                                  {member.email && ` • ${member.email}`}
+                                </p>
+                              </div>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.875rem' }}
+                                onClick={() => {
+                                  setEditingFamilyMember(member);
+                                  setShowEditFamilyMemberModal(true);
+                                }}
+                              >
+                                Rediger
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        className="btn btn-primary"
+                        style={{ marginTop: '1rem' }}
+                        onClick={() => setShowAddFamilyMemberModal(true)}
+                      >
+                        + Legg til familiemedlem
+                      </button>
+                    </div>
+                  )}
+
+                  {setupActiveTab === 'custody' && (
+                    <div>
+                      <h2 style={{ marginBottom: '1.5rem' }}>📅 Samværsregler</h2>
+                      <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+                        Konfigurer samværsordninger, høytider og spesielle perioder.
+                      </p>
+
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ justifyContent: 'flex-start', padding: '1rem' }}
+                          onClick={() => setShowCustodyConfig(true)}
+                        >
+                          🔧 Grunnleggende samværsordning
+                          <span style={{ marginLeft: 'auto', fontSize: '0.875rem', color: '#6b7280' }}>
+                            {custodyPattern === 'alternating-weeks' ? 'Annenhver uke' :
+                             custodyPattern === 'every-other-weekend' ? 'Annenhver helg' :
+                             custodyPattern === 'custom' ? 'Tilpasset' : custodyPattern}
+                          </span>
+                        </button>
+
+                        <button
+                          className="btn btn-secondary"
+                          style={{ justifyContent: 'flex-start', padding: '1rem' }}
+                          onClick={() => setShowHolidayExceptionsModal(true)}
+                        >
+                          🎄 Høytider og ferier
+                          <span style={{ marginLeft: 'auto', fontSize: '0.875rem', color: '#6b7280' }}>
+                            {holidayExceptions.length} konfiguert
+                          </span>
+                        </button>
+
+                        <button
+                          className="btn btn-secondary"
+                          style={{ justifyContent: 'flex-start', padding: '1rem' }}
+                          onClick={() => setShowRotationPeriodsModal(true)}
+                        >
+                          📅 Rotasjonsperioder
+                          <span style={{ marginLeft: 'auto', fontSize: '0.875rem', color: '#6b7280' }}>
+                            {rotationPeriods.length} konfiguert
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {setupActiveTab === 'checklists' && (
+                    <div>
+                      <h2 style={{ marginBottom: '1.5rem' }}>📝 Overføring Sjekklister</h2>
+                      <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+                        Administrer sjekklister for overføring mellom foreldre.
+                      </p>
+
+                      {/* Permanent Items */}
+                      <div style={{ marginBottom: '2rem' }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Faste gjenstander</h3>
+                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                          {transferChecklists.permanent.map(item => (
+                            <div key={item.id} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '0.5rem',
+                              backgroundColor: '#f9fafb',
+                              borderRadius: '0.5rem'
+                            }}>
+                              <span>{item.item}</span>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                                onClick={() => handleRemovePermanentItem(item.id)}
+                              >
+                                Fjern
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}
+                          onClick={() => setShowAddChecklistItemModal(true)}
+                        >
+                          + Legg til fast gjenstand
+                        </button>
+                      </div>
+
+                      {/* Templates */}
+                      <div>
+                        <h3 style={{ marginBottom: '1rem' }}>Maler</h3>
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                          {checklistTemplates.templates.map(template => (
+                            <div key={template.id} className="card" style={{ padding: '1rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                <h4 style={{ margin: 0 }}>{template.name}</h4>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ fontSize: '0.875rem' }}
+                                  onClick={() => {
+                                    setEditingTemplate(template);
+                                    setShowEditTemplateModal(true);
+                                  }}
+                                >
+                                  Rediger
+                                </button>
+                              </div>
+                              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                                {template.items.length} gjenstander: {template.items.slice(0, 2).join(', ')}
+                                {template.items.length > 2 && '...'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          className="btn btn-primary"
+                          style={{ marginTop: '1rem' }}
+                          onClick={() => setShowAddTemplateModal(true)}
+                        >
+                          + Opprett ny mal
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {setupActiveTab === 'notifications' && (
+                    <div>
+                      <h2 style={{ marginBottom: '1.5rem' }}>🔔 Automatiske Påminnelser</h2>
+                      <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+                        Konfigurer automatiske påminnelser for samværsoverføringer og oppgaver.
+                      </p>
+
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div className="card" style={{ padding: '1rem' }}>
+                          <h4 style={{ margin: 0, marginBottom: '0.5rem' }}>Overføringspåminnelser</h4>
+                          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+                            Send påminnelser om sjekklister før samværsoverføringer
+                          </p>
+                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <label style={{ fontSize: '0.875rem' }}>Påminn</label>
+                            <select className="form-input" style={{ width: 'auto' }}>
+                              <option value="1">1 dag før</option>
+                              <option value="2">2 dager før</option>
+                              <option value="3">3 dager før</option>
+                            </select>
+                            <label style={{ fontSize: '0.875rem' }}>overføring</label>
+                          </div>
+                        </div>
+
+                        <div className="card" style={{ padding: '1rem' }}>
+                          <h4 style={{ margin: 0, marginBottom: '0.5rem' }}>Oppgavepåminnelser</h4>
+                          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+                            Send påminnelser om forfallende oppgaver og aktiviteter
+                          </p>
+                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <input type="checkbox" defaultChecked />
+                            <label style={{ fontSize: '0.875rem' }}>Aktiver oppgavepåminnelser</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Regular Dashboard Content */}
+            {activeTab !== 'setup' && (
+              <>
+                {/* Stats Cards - moved to top */}
+            <div className="grid grid-cols-2 gap-4" style={{ marginBottom: '1.5rem' }}>
+              <div
+                className="card"
+                style={{ cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.1s' }}
+                onClick={() => handleStatsCardClick('tasksToday')}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#10b981' }}>🕐</span>
+                  <div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>I dag</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.tasksToday}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="card"
+                style={{ cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.1s' }}
+                onClick={() => handleStatsCardClick('overdueTasks')}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#ef4444' }}>⚠️</span>
+                  <div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Forfalt</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{stats.overdueTasks}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="card"
+                style={{ cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.1s' }}
+                onClick={() => handleStatsCardClick('standaloneTasks')}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#8b5cf6' }}>📝</span>
+                  <div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Frittstående</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.standaloneTasks}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="card"
+                style={{ cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.1s' }}
+                onClick={() => handleStatsCardClick('activeProjects')}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#3b82f6' }}>✅</span>
+                  <div>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Aktive prosjekter</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.activeProjects}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Family Calendar Widget */}
+            <div className="calendar-widget" style={{ marginBottom: '1.5rem' }}>
+              <div className="calendar-header">
+                <button
+                  className="calendar-nav"
+                  onClick={() => {
+                    const newDate = new Date(currentDate);
+                    newDate.setMonth(newDate.getMonth() - 1);
+                    setCurrentDate(newDate);
+                  }}
+                >
+                  ◀
+                </button>
+                <h4 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
+                  {currentDate.toLocaleDateString('no-NO', { month: 'long', year: 'numeric' })}
+                </h4>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowCustodyConfig(true)}
+                  style={{ padding: '0.5rem', fontSize: '0.875rem' }}
+                  title="Konfigurer samværsordning"
+                >
+                  ⚙️
+                </button>
+                <button
+                  className="calendar-nav"
+                  onClick={() => {
+                    const newDate = new Date(currentDate);
+                    newDate.setMonth(newDate.getMonth() + 1);
+                    setCurrentDate(newDate);
+                  }}
+                >
+                  ▶
+                </button>
+              </div>
+
+              <div className="calendar-grid">
+                {/* Week number and day headers */}
+                <div className="calendar-day-header" style={{ fontSize: '0.7rem' }}>Uke</div>
+                {['Ma', 'Ti', 'On', 'To', 'Fr', 'Lø', 'Sø'].map(day => (
+                  <div key={day} className="calendar-day-header">{day}</div>
+                ))}
+
+                {(() => {
+                  const year = currentDate.getFullYear();
+                  const month = currentDate.getMonth();
+                  const firstDay = new Date(year, month, 1);
+                  const startDate = new Date(firstDay);
+
+                  // Adjust for Monday start (Norwegian standard)
+                  const dayOfWeek = firstDay.getDay();
+                  const mondayOffset = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
+                  startDate.setDate(firstDay.getDate() + mondayOffset);
+
+                  const days = [];
+                  const currentDateStr = new Date().toISOString().split('T')[0];
+
+                  // Helper function to get week number
+                  const getWeekNumber = (date: Date) => {
+                    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                    const dayNum = d.getUTCDay() || 7;
+                    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                  };
+
+
+                  // Generate calendar for 6 weeks (42 days)
+                  for (let week = 0; week < 6; week++) {
+                    const weekStartDate = new Date(startDate);
+                    weekStartDate.setDate(startDate.getDate() + (week * 7));
+                    const weekNumber = getWeekNumber(weekStartDate);
+
+                    // Determine custody for this week
+                    const weekCustodyParent = getCustodyParent(weekStartDate);
+                    const weekBgColor = weekCustodyParent === 'mother' ? '#fdf2f8' : '#f0f9ff'; // Pink for mother, blue for father
+                    const weekBorderColor = weekCustodyParent === 'mother' ? '#ec4899' : '#3b82f6';
+
+                    // Add week number
+                    days.push(
+                      <div
+                        key={`week-${week}`}
+                        className="calendar-day-header"
+                        style={{
+                          fontSize: '0.7rem',
+                          color: '#6b7280',
+                          fontWeight: '500',
+                          background: weekBgColor,
+                          border: `1px solid ${weekBorderColor}`,
+                          borderRadius: '4px'
+                        }}
+                      >
+                        {weekNumber}
+                      </div>
+                    );
+
+                    // Add days for this week
+                    for (let day = 0; day < 7; day++) {
+                      const date = new Date(startDate);
+                      date.setDate(startDate.getDate() + (week * 7) + day);
+                      const dateStr = date.toISOString().split('T')[0];
+                      const isCurrentMonth = date.getMonth() === month;
+                      const isToday = dateStr === currentDateStr;
+
+                      // Get custody parent for this day
+                      const custodyParent = getCustodyParent(date);
+                      const dayBgColor = custodyParent === 'mother' ? '#fdf2f8' : '#f0f9ff';
+                      const dayBorderColor = custodyParent === 'mother' ? '#ec4899' : '#3b82f6';
+
+                      // Check if this date has activities
+                      const allFamilyActivities = getFilteredFamilyActivities();
+                      const combinedActivities = [
+                        ...allFamilyActivities.childActivities,
+                        ...allFamilyActivities.parentActivities,
+                        ...allFamilyActivities.custodySchedules,
+                        ...allFamilyActivities.transferReminders
+                      ];
+
+                      const hasActivities = combinedActivities.some(activity => {
+                        const activityDate = (activity.date || activity.startDate || activity.reminderDate)?.split('T')[0];
+                        return activityDate === dateStr;
+                      });
+
+                      days.push(
+                        <div
+                          key={dateStr}
+                          className={`calendar-day ${isToday ? 'today' : ''} ${hasActivities ? 'has-tasks' : ''}`}
+                          style={{
+                            opacity: isCurrentMonth ? 1 : 0.3,
+                            cursor: 'pointer',
+                            background: isToday ? dayBorderColor : dayBgColor,
+                            color: isToday ? 'white' : 'inherit',
+                            border: `1px solid ${dayBorderColor}`,
+                            borderRadius: '4px'
+                          }}
+                          onClick={() => setSelectedDateDetails(dateStr)}
+                        >
+                          <span>{date.getDate()}</span>
+                          {hasActivities && (
+                            <div
+                              className="task-dot"
+                              style={{
+                                background: isToday ? 'rgba(255,255,255,0.8)' : dayBorderColor
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    }
+                  }
+
+                  return days;
+                })()}
+              </div>
+
+              {/* Legend */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '1rem',
+                marginTop: '0.5rem',
+                fontSize: '0.75rem',
+                color: '#6b7280'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    background: '#fdf2f8',
+                    border: '1px solid #ec4899',
+                    borderRadius: '2px'
+                  }}></div>
+                  <span>Hos mor</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    background: '#f0f9ff',
+                    border: '1px solid #3b82f6',
+                    borderRadius: '2px'
+                  }}></div>
+                  <span>Hos far</span>
+                </div>
+              </div>
+
+              {/* Calendar Filters */}
+              <div style={{ marginTop: '1rem' }}>
+                {/* Child Filter Row */}
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.25rem', width: '100%' }}>
+                    <button
+                      className={`btn ${selectedChildFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.5rem 0.75rem', fontSize: '0.875rem', flex: 1 }}
+                      onClick={() => setSelectedChildFilter('all')}
+                    >
+                      Alle barn
+                    </button>
+                    {mockChildren.map((child) => (
+                      <button
+                        key={child.id}
+                        className={`btn ${selectedChildFilter === child.id ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.875rem',
+                          flex: 1,
+                          backgroundColor: selectedChildFilter === child.id ? child.color : undefined,
+                          borderColor: child.color
+                        }}
+                        onClick={() => setSelectedChildFilter(child.id)}
+                      >
+                        {child.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Parent Filter Row */}
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.25rem', width: '100%' }}>
+                    <button
+                      className={`btn ${selectedParentFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.5rem 0.75rem', fontSize: '0.875rem', flex: 1 }}
+                      onClick={() => setSelectedParentFilter('all')}
+                    >
+                      Alle
+                    </button>
+                    {mockParents.map((parent) => (
+                      <button
+                        key={parent.id}
+                        className={`btn ${selectedParentFilter === parent.id ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.875rem',
+                          flex: 1,
+                          backgroundColor: selectedParentFilter === parent.id ? parent.color : undefined,
+                          borderColor: parent.color
+                        }}
+                        onClick={() => setSelectedParentFilter(parent.id)}
+                      >
+                        {parent.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Tasks Section */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div className="section-header" onClick={() => toggleSection('upcomingTasks')}>
+                <h3 className="section-title">Kommende oppgaver ({upcomingTasks.length})</h3>
+                <button className={`section-toggle ${expandedSections.upcomingTasks ? 'expanded' : ''}`}>
+                  ▶
+                </button>
+              </div>
+
+              <div className={`section-content ${!expandedSections.upcomingTasks ? 'collapsed' : ''}`}>
+                {/* Time Filter Buttons */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', padding: '0 0.5rem' }}>
+                  {(['1day', '3days', '1week'] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      className={`btn ${upcomingTasksFilter === filter ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', flex: 1 }}
+                      onClick={() => setUpcomingTasksFilter(filter)}
+                    >
+                      {filter === '1day' ? '1 dag' :
+                       filter === '3days' ? '3 dager' :
+                       '1 uke'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Upcoming Tasks Content */}
+                <div className="card" data-section="upcoming-tasks">
+
+              {upcomingTasks.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#6b7280', padding: '1.5rem' }}>
+                  <p>🎉 Ingen oppgaver forfaller de neste {upcomingTasksFilter === '1day' ? 'dagen' : upcomingTasksFilter === '3days' ? '3 dagene' : 'uken'}!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {upcomingTasks.map((task) => {
+                    const daysUntilDue = Math.ceil((new Date(task.dueDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    const isUrgent = daysUntilDue <= 1;
+
+                    return (
+                      <div
+                        key={task.id}
+                        className="card"
+                        style={{
+                          background: isUrgent ? '#fef2f2' : 'white',
+                          border: isUrgent ? '2px solid #fecaca' : '1px solid #e5e7eb',
+                          padding: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'box-shadow 0.2s, transform 0.1s'
+                        }}
+                        onClick={() => handleTaskClick(task)}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.boxShadow = isUrgent ? '0 1px 3px rgba(254, 202, 202, 0.5)' : '0 1px 3px rgba(0, 0, 0, 0.1)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div className={priorityColors[task.priority]} style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%'
+                            }} />
+                            <div>
+                              <p style={{ fontWeight: isUrgent ? '600' : '500', color: isUrgent ? '#dc2626' : 'inherit', fontSize: '0.875rem' }}>{task.title}</p>
+                              {task.project && (
+                                <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{task.project}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{
+                              fontSize: '0.75rem',
+                              color: isUrgent ? '#dc2626' : '#6b7280',
+                              fontWeight: isUrgent ? '600' : 'normal'
+                            }}>
+                              {daysUntilDue === 0 ? 'I dag' :
+                               daysUntilDue === 1 ? 'I morgen' :
+                               `Om ${daysUntilDue} dager`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+                </div>
+              </div>
+            </div>
+
+            {/* Projects Overview */}
+            <div style={{ display: 'grid', gap: '1.5rem' }}>
+              <div data-section="projects">
+                <div className="section-header" onClick={() => toggleSection('projects')}>
+                  <h3 className="section-title">Aktive Prosjekter ({mockProjects.length})</h3>
+                  <button className={`section-toggle ${expandedSections.projects ? 'expanded' : ''}`}>
+                    ▶
+                  </button>
+                </div>
+                <div className={`section-content ${!expandedSections.projects ? 'collapsed' : ''}`}>
+                  <div style={{ display: 'grid', gap: '1rem' }}>
+                    {mockProjects.map((project) => (
+                      <div key={project.id} className="card" style={{ cursor: 'pointer', transition: 'box-shadow 0.2s' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <h4 style={{ fontWeight: '600' }}>{project.title}</h4>
+                              <span className={priorityBadgeColors[project.priority]} style={{
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                              }}>
+                                {project.priority === 'high' ? 'Høy' :
+                                 project.priority === 'medium' ? 'Medium' : 'Lav'}
+                              </span>
+                            </div>
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                              {project.tasksCompleted} av {project.tasksTotal} oppgaver fullført
+                            </p>
+                            {project.dueDate && (
+                              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
+                                Frist: {new Date(project.dueDate).toLocaleDateString('no-NO')}
+                              </p>
+                            )}
+                          </div>
+                          <div className={priorityColors[project.priority]} style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%'
+                          }} />
+                        </div>
+                        <div style={{
+                          width: '100%',
+                          height: '8px',
+                          background: '#e5e7eb',
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            width: `${project.progress}%`,
+                            height: '100%',
+                            background: '#3b82f6',
+                            transition: 'width 0.3s'
+                          }} />
+                        </div>
+                        <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                          {project.progress}% fullført
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+              {/* Standalone Tasks */}
+              <div data-section="standaloneTasks">
+                <div className="section-header" onClick={() => toggleSection('standaloneTasks')}>
+                  <h3 className="section-title">Frittstående Oppgaver ({mockTasks.filter(task => !task.project).length})</h3>
+                  <button className={`section-toggle ${expandedSections.standaloneTasks ? 'expanded' : ''}`}>
+                    ▶
+                  </button>
+                </div>
+                <div className={`section-content ${!expandedSections.standaloneTasks ? 'collapsed' : ''}`}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {mockTasks.filter(task => !task.project).slice(0, 5).map((task) => (
+                      <div key={task.id} className="card">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div className={priorityColors[task.priority]} style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%'
+                            }} />
+                            <div>
+                              <p style={{ fontWeight: '500' }}>{task.title}</p>
+                              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Generell oppgave</p>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            {task.dueDate && (
+                              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                {new Date(task.dueDate).toLocaleDateString('no-NO')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Children's Calendar */}
+              <div data-section="children-calendar">
+                <div className="section-header" onClick={() => toggleSection('childrenCalendar')}>
+                  <h3 className="section-title">Familie kalender ({familyActivities.childActivities.length + familyActivities.parentActivities.length + familyActivities.transferReminders.length})</h3>
+                  <button className={`section-toggle ${expandedSections.childrenCalendar ? 'expanded' : ''}`}>
+                    ▶
+                  </button>
+                </div>
+                <div className={`section-content ${!expandedSections.childrenCalendar ? 'collapsed' : ''}`}>
+                  {/* Get filtered family activities */}
+                  {(() => {
+                    const familyActivitiesData = getFilteredFamilyActivities();
+
+                    // Combine all activities into a single array for display
+                    const allFamilyActivities = [
+                      ...familyActivitiesData.childActivities,
+                      ...familyActivitiesData.parentActivities,
+                      ...familyActivitiesData.custodySchedules,
+                      ...familyActivitiesData.transferReminders
+                    ].sort((a, b) => {
+                      // Get the date for sorting, handling different date field names
+                      const getActivityDate = (activity: any) => {
+                        return activity.date || activity.startDate || activity.reminderDate;
+                      };
+                      return new Date(getActivityDate(a)).getTime() - new Date(getActivityDate(b)).getTime();
+                    });
+
+                    return (
+                      <>
+                        {/* Weather Row */}
+                  <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      {weatherData.map((weather, index) => {
+                        const date = new Date(weather.date);
+                        const isToday = date.toDateString() === new Date().toDateString();
+
+                        return (
+                          <div key={weather.date} style={{
+                            textAlign: 'center',
+                            flex: 1,
+                            padding: '0.25rem',
+                            borderRadius: '0.25rem',
+                            background: isToday ? '#dbeafe' : 'transparent'
+                          }}>
+                            <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                              {isToday ? 'I dag' : date.toLocaleDateString('no-NO', { weekday: 'short', day: 'numeric' })}
+                            </div>
+                            <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{weather.icon}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#4b5563', fontWeight: '500' }}>{weather.temp}°</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+
+                  {/* Time Filter Row */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      {(['1day', '3days', '1week'] as const).map((filter) => (
+                        <button
+                          key={filter}
+                          className={`btn ${childrenCalendarFilter === filter ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', flex: 1 }}
+                          onClick={() => setChildrenCalendarFilter(filter)}
+                        >
+                          {filter === '1day' ? '1 dag' :
+                           filter === '3days' ? '3 dager' : '1 uke'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                        {/* Activities List */}
+                        {allFamilyActivities.length === 0 ? (
+                          <div style={{ textAlign: 'center', color: '#6b7280', padding: '1.5rem' }}>
+                            <p>📅 Ingen aktiviteter de neste {childrenCalendarFilter === '1day' ? 'dagen' : childrenCalendarFilter === '3days' ? '3 dagene' : 'uken'}!</p>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingBottom: '6rem' }}>
+                            {allFamilyActivities.map((activity: any) => {
+                              let displayColor = '#6b7280';
+                              let displayName = '';
+                              let displayTitle = activity.title || activity.notes || 'Aktivitet';
+                              let displayIcon = '';
+
+                              // Determine activity type and display info
+                              if (activity.type === 'child-activity') {
+                                const child = mockChildren.find(c => c.id === activity.childId);
+                                displayColor = child?.color || '#6b7280';
+                                displayName = child?.name || '';
+                                displayIcon = '👶';
+                              } else if (activity.type === 'parent-activity') {
+                                const parent = mockParents.find(p => p.id === activity.parentId);
+                                displayColor = parent?.color || '#6b7280';
+                                displayName = parent?.name || '';
+                                displayIcon = '👤';
+                              } else if (activity.type === 'custody-schedule') {
+                                const parent = mockParents.find(p => p.id === activity.parentId);
+                                const child = mockChildren.find(c => c.id === activity.childId);
+                                displayColor = parent?.color || '#6b7280';
+                                displayName = `${child?.name} hos ${parent?.name}`;
+                                displayIcon = '🏠';
+                              } else if (activity.type === 'transfer-reminder') {
+                                displayColor = '#f59e0b';
+                                displayName = 'Huskeliste';
+                                displayIcon = '📋';
+                              }
+
+                              const activityDate = new Date(activity.date || activity.startDate || activity.reminderDate);
+                              const isToday = activityDate.toDateString() === new Date().toDateString();
+
+                              return (
+                                <div
+                                  key={activity.id}
+                                  className="card"
+                                  style={{
+                                    padding: '0.75rem',
+                                    borderLeft: `4px solid ${displayColor}`,
+                                    cursor: 'pointer',
+                                    transition: 'box-shadow 0.2s, transform 0.1s'
+                                  }}
+                                  onClick={() => handleActivityClick(activity)}
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.875rem' }}>{displayIcon}</span>
+                                        <p style={{ fontWeight: '600', fontSize: '0.875rem', color: displayColor }}>
+                                          {displayName}
+                                        </p>
+                                        {displayName && <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>•</span>}
+                                        <p style={{ fontWeight: '500', fontSize: '0.875rem' }}>{displayTitle}</p>
+                                      </div>
+                                      {(activity.startTime || activity.endTime) && (
+                                        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                                          {activity.startTime} {activity.endTime ? `- ${activity.endTime}` : ''}
+                                        </p>
+                                      )}
+                                      {activity.location && (
+                                        <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                                          📍 {activity.location}
+                                        </p>
+                                      )}
+                                    </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <p style={{
+                                  fontSize: '0.75rem',
+                                  color: isToday ? '#dc2626' : '#6b7280',
+                                  fontWeight: isToday ? '600' : 'normal'
+                                }}>
+                                  {isToday ? 'I dag' : activityDate.toLocaleDateString('no-NO', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                        )}
+                    </div>
+                  </div>
+                </div>
+            )}
+          </div>
+        </main>
+
+      {/* New Project Modal */}
+      {showNewProjectModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '600' }}>Opprett Nytt Prosjekt</h2>
+            <form onSubmit={handleCreateProject}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Prosjektnavn</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="f.eks. Selge leiligheten"
+                  value={newProject.title}
+                  onChange={(e) => setNewProject({...newProject, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Prioritet</label>
+                <select
+                  className="form-input"
+                  value={newProject.priority}
+                  onChange={(e) => setNewProject({...newProject, priority: e.target.value as 'high' | 'medium' | 'low'})}
+                >
+                  <option value="low">Lav</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">Høy</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Frist (valgfritt)</label>
+                <input
+                  className="form-input"
+                  type="date"
+                  value={newProject.dueDate}
+                  onChange={(e) => setNewProject({...newProject, dueDate: e.target.value})}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Opprett Prosjekt
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowNewProjectModal(false)}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* New Task Modal */}
+      {showNewTaskModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '600' }}>Opprett Ny Oppgave</h2>
+            <form onSubmit={handleCreateTask}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Oppgavetittel</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="f.eks. Ring advokat"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Prosjekt (valgfritt)</label>
+                <select
+                  className="form-input"
+                  value={newTask.project}
+                  onChange={(e) => setNewTask({...newTask, project: e.target.value})}
+                >
+                  <option value="">Frittstående oppgave (ikke tilknyttet prosjekt)</option>
+                  {mockProjects.map((project) => (
+                    <option key={project.id} value={project.title}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Prioritet</label>
+                <select
+                  className="form-input"
+                  value={newTask.priority}
+                  onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'high' | 'medium' | 'low'})}
+                >
+                  <option value="low">Lav</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">Høy</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Frist (valgfritt)</label>
+                <input
+                  className="form-input"
+                  type="date"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Opprett Oppgave
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowNewTaskModal(false)}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* New Child Activity Modal */}
+      {showNewChildActivityModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '600' }}>Legg til Barneaktivitet</h2>
+            <form onSubmit={handleCreateChildActivity}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Barn</label>
+                <select
+                  className="form-input"
+                  value={newChildActivity.childId}
+                  onChange={(e) => setNewChildActivity({...newChildActivity, childId: e.target.value})}
+                  required
+                >
+                  <option value="">Velg barn</option>
+                  {mockChildren.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.name} ({child.age} år)
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Aktivitet</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="f.eks. Fotballtrening"
+                  value={newChildActivity.title}
+                  onChange={(e) => setNewChildActivity({...newChildActivity, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Dato</label>
+                <input
+                  className="form-input"
+                  type="date"
+                  value={newChildActivity.date}
+                  onChange={(e) => setNewChildActivity({...newChildActivity, date: e.target.value})}
+                  required
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label className="form-label">Fra tid</label>
+                  <input
+                    className="form-input"
+                    type="time"
+                    value={newChildActivity.startTime}
+                    onChange={(e) => setNewChildActivity({...newChildActivity, startTime: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Til tid</label>
+                  <input
+                    className="form-input"
+                    type="time"
+                    value={newChildActivity.endTime}
+                    onChange={(e) => setNewChildActivity({...newChildActivity, endTime: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Sted (valgfritt)</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="f.eks. Turnhallen"
+                  value={newChildActivity.location}
+                  onChange={(e) => setNewChildActivity({...newChildActivity, location: e.target.value})}
+                />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Gjentagelse</label>
+                <select
+                  className="form-input"
+                  value={newChildActivity.recurring}
+                  onChange={(e) => setNewChildActivity({...newChildActivity, recurring: e.target.value as 'none' | 'daily' | 'weekly'})}
+                >
+                  <option value="none">Engangshendelse</option>
+                  <option value="weekly">Ukentlig</option>
+                  <option value="daily">Daglig</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Legg til aktivitet
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowNewChildActivityModal(false)}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Menu Overlay */}
+      {showFloatingMenu && (
+        <div
+          className="floating-menu-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1003,
+            background: 'rgba(0,0,0,0.2)'
+          }}
+          onClick={() => setShowFloatingMenu(false)}
+        />
+      )}
+
+      {/* Floating Action Button */}
+      <div className="floating-action-container" style={{
+        position: 'fixed',
+        bottom: isNearBottom ? '8rem' : '2rem',
+        [handPreference]: isNearBottom ? '1rem' : '2rem',
+        zIndex: 1005,
+        transition: 'bottom 0.3s ease, right 0.3s ease, left 0.3s ease'
+      }}>
+        {/* Floating Menu */}
+        {showFloatingMenu && (
+          <div
+            className="floating-menu"
+            style={{
+              position: 'absolute',
+              bottom: '5rem',
+              [handPreference]: '0',
+              background: 'white',
+              borderRadius: '0.75rem',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.25)',
+              border: '1px solid #e5e7eb',
+              minWidth: '220px',
+              overflow: 'hidden',
+              zIndex: 9999
+            }}
+          >
+            <button
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                justifyContent: 'flex-start',
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: '1px solid #e5e7eb'
+              }}
+              onClick={() => handleFloatingAction('task')}
+            >
+              📝 Ny oppgave
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{
+                width: '100%',
+                justifyContent: 'flex-start',
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: '1px solid #e5e7eb'
+              }}
+              onClick={() => handleFloatingAction('childActivity')}
+            >
+              🏃 Barneaktivitet
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{
+                width: '100%',
+                justifyContent: 'flex-start',
+                borderRadius: 0,
+                border: 'none'
+              }}
+              onClick={() => handleFloatingAction('project')}
+            >
+              📁 Nytt prosjekt
+            </button>
+          </div>
+        )}
+
+        {/* Main Floating Button */}
+        <button
+          className="btn btn-primary floating-button"
+          style={{
+            width: '4rem',
+            height: '4rem',
+            borderRadius: '50%',
+            fontSize: '1.5rem',
+            transform: showFloatingMenu ? 'rotate(45deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease'
+          }}
+          onClick={() => setShowFloatingMenu(!showFloatingMenu)}
+        >
+          +
+        </button>
+      </div>
+
+      {/* Activity Detail Modal */}
+      {selectedActivity && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '400px', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>Aktivitetsdetaljer</h2>
+              <button
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280' }}
+                onClick={() => setSelectedActivity(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            {(() => {
+              const child = mockChildren.find(c => c.id === selectedActivity.childId);
+              const activityDate = new Date(selectedActivity.date);
+              const isToday = activityDate.toDateString() === new Date().toDateString();
+
+              return (
+                <div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                      <div style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        backgroundColor: child?.color || '#6b7280'
+                      }} />
+                      <span style={{ fontWeight: '600', color: child?.color || '#6b7280' }}>{child?.name}</span>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                      {selectedActivity.title}
+                    </h3>
+
+                    <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ color: '#6b7280' }}>📅</span>
+                        <span style={{ fontWeight: isToday ? '600' : 'normal', color: isToday ? '#dc2626' : 'inherit' }}>
+                          {isToday ? 'I dag' : activityDate.toLocaleDateString('no-NO', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long'
+                          })}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ color: '#6b7280' }}>🕐</span>
+                        <span>{selectedActivity.startTime} - {selectedActivity.endTime}</span>
+                      </div>
+
+                      {selectedActivity.location && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ color: '#6b7280' }}>📍</span>
+                          <span>{selectedActivity.location}</span>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ color: '#6b7280' }}>🔄</span>
+                        <span>
+                          {selectedActivity.recurring === 'none' ? 'Engangshendelse' :
+                           selectedActivity.recurring === 'daily' ? 'Daglig gjentagelse' :
+                           'Ukentlig gjentagelse'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    className="btn btn-secondary"
+                    style={{ width: '100%' }}
+                    onClick={() => setSelectedActivity(null)}
+                  >
+                    Lukk
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '400px', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>Oppgavedetaljer</h2>
+              <button
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280' }}
+                onClick={() => setSelectedTask(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div>
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    backgroundColor:
+                      selectedTask.priority === 'high' ? '#dc2626' :
+                      selectedTask.priority === 'medium' ? '#d97706' : '#16a34a'
+                  }} />
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    color:
+                      selectedTask.priority === 'high' ? '#dc2626' :
+                      selectedTask.priority === 'medium' ? '#d97706' : '#16a34a'
+                  }}>
+                    {selectedTask.priority === 'high' ? 'Høy prioritet' :
+                     selectedTask.priority === 'medium' ? 'Medium prioritet' : 'Lav prioritet'}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  {selectedTask.title}
+                </h3>
+
+                <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
+                  {selectedTask.project && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#6b7280' }}>📁</span>
+                      <span>{selectedTask.project}</span>
+                    </div>
+                  )}
+
+                  {selectedTask.dueDate && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#6b7280' }}>📅</span>
+                      <span>
+                        {new Date(selectedTask.dueDate).toLocaleDateString('no-NO', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long'
+                        })}
+                      </span>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ color: '#6b7280' }}>📋</span>
+                    <span>{selectedTask.project ? 'Prosjektoppgave' : 'Frittstående oppgave'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className="btn btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => setSelectedTask(null)}
+              >
+                Lukk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Day Details Modal */}
+      {selectedDateDetails && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '500px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>
+              {new Date(selectedDateDetails).toLocaleDateString('no-NO', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+              })}
+            </h3>
+
+            {(() => {
+              const selectedCustody = getCustodyParent(new Date(selectedDateDetails));
+              const custodyColor = selectedCustody === 'mother' ? '#ec4899' : '#3b82f6';
+              const custodyText = selectedCustody === 'mother' ? 'Hos mor' : 'Hos far';
+
+              return (
+                <div style={{
+                  padding: '0.5rem',
+                  background: selectedCustody === 'mother' ? '#fdf2f8' : '#f0f9ff',
+                  border: `1px solid ${custodyColor}`,
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  textAlign: 'center',
+                  fontWeight: '600'
+                }}>
+                  👨‍👩‍👧‍👦 {custodyText}
+                </div>
+              );
+            })()}
+
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowTransferChecklist(true)}
+              style={{ width: '100%', marginBottom: '1rem' }}
+            >
+              📋 Vis huskeliste for overføring
+            </button>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <h4>📅 Oppgaver denne dagen:</h4>
+              {(() => {
+                const dayTasks = mockTasks.filter(task =>
+                  task.dueDate === selectedDateDetails
+                );
+
+                if (dayTasks.length === 0) {
+                  return <p style={{ color: '#6b7280' }}>Ingen oppgaver denne dagen</p>;
+                }
+
+                return dayTasks.map(task => (
+                  <div key={task.id} className="card" style={{
+                    marginBottom: '0.5rem',
+                    padding: '0.75rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontWeight: '600' }}>{task.title}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      {task.project || 'Frittstående oppgave'}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <button
+              className="btn btn-secondary"
+              onClick={() => setSelectedDateDetails(null)}
+              style={{ width: '100%' }}
+            >
+              Lukk
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Checklist Modal */}
+      {showTransferChecklist && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001
+        }}>
+          <div className="card" style={{ maxWidth: '500px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>📋 FLYTTELISTE: Til Far</h3>
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Fredag 4. oktober</p>
+
+            {/* Permanent items */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: '#ec4899', marginBottom: '0.5rem' }}>🎒 PERMANENT (Hver gang)</h4>
+              {transferChecklists.permanent.map(item => (
+                <div key={item.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '0.5rem',
+                  textDecoration: item.checked ? 'line-through' : 'none',
+                  opacity: item.checked ? 0.6 : 1
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={(e) => {
+                      setTransferChecklists(prev => ({
+                        ...prev,
+                        permanent: prev.permanent.map(i =>
+                          i.id === item.id ? { ...i, checked: e.target.checked } : i
+                        )
+                      }));
+                    }}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  <span>{item.item}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* This time items */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>📝 DENNE GANGEN</h4>
+              {transferChecklists.thisTime.map(item => (
+                <div key={item.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '0.5rem',
+                  textDecoration: item.checked ? 'line-through' : 'none',
+                  opacity: item.checked ? 0.6 : 1
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={(e) => {
+                      setTransferChecklists(prev => ({
+                        ...prev,
+                        thisTime: prev.thisTime.map(i =>
+                          i.id === item.id ? { ...i, checked: e.target.checked } : i
+                        )
+                      }));
+                    }}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  <span>{item.item}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Activity items */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: '#16a34a', marginBottom: '0.5rem' }}>⚽ FOTBALLTRENING (Lørdag)</h4>
+              {transferChecklists.activities.map(item => (
+                <div key={item.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '0.5rem',
+                  textDecoration: item.checked ? 'line-through' : 'none',
+                  opacity: item.checked ? 0.6 : 1
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={(e) => {
+                      setTransferChecklists(prev => ({
+                        ...prev,
+                        activities: prev.activities.map(i =>
+                          i.id === item.id ? { ...i, checked: e.target.checked } : i
+                        )
+                      }));
+                    }}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  <span>{item.item}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowTransferChecklist(false)}
+              style={{ width: '100%' }}
+            >
+              Lukk
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custody Configuration Modal */}
+      {showCustodyConfig && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '500px', width: '90%' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Konfigurer samværsordning</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Type samværsordning</label>
+              <select
+                className="form-input"
+                value={custodyPattern}
+                onChange={(e) => setCustodyPattern(e.target.value as any)}
+              >
+                <option value="alternating-weeks">Annenhver hele uke</option>
+                <option value="every-other-weekend">Annenhver helg (fredag-søndag)</option>
+                <option value="weekdays-mother-weekends-father">Hverdager hos mor, helger hos far</option>
+                <option value="custom">🔧 Avansert tilpasning</option>
+              </select>
+            </div>
+
+            {custodyPattern === 'custom' && (
+              <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Rotasjonsperiode</label>
+                  <select
+                    className="form-input"
+                    value={rotationWeeks}
+                    onChange={(e) => setRotationWeeks(Number(e.target.value))}
+                  >
+                    <option value={1}>1 uke (samme mønster hver uke)</option>
+                    <option value={2}>2 uker (mønster gjentas annenhver uke)</option>
+                    <option value={4}>4 uker (månedlig rotasjon)</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Ukentlig mønster</label>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}>
+                    {['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'].map((dayName, index) => {
+                      const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][index];
+                      const dayPattern = customWeeklyPattern.find(p => p.day === dayKey);
+
+                      return (
+                        <div key={dayKey} style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>{dayName}</div>
+                          <select
+                            className="form-input"
+                            style={{ fontSize: '0.75rem', padding: '0.25rem' }}
+                            value={dayPattern?.parent || 'mother'}
+                            onChange={(e) => {
+                              setCustomWeeklyPattern(prev =>
+                                prev.map(p =>
+                                  p.day === dayKey
+                                    ? { ...p, parent: e.target.value as any }
+                                    : p
+                                )
+                              );
+                            }}
+                          >
+                            <option value="mother">👩 Mor</option>
+                            <option value="father">👨 Far</option>
+                            <option value="shared">👨‍👩‍👧‍👦 Delt</option>
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{
+                  background: '#f0f9ff',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.875rem'
+                }}>
+                  <strong>💡 Hvordan det fungerer:</strong><br/>
+                  • Sett opp én uke som mal<br/>
+                  • Ved {rotationWeeks}-ukers rotasjon veksler mønsteret automatisk<br/>
+                  • "Delt" betyr at den følger startinnstillingen for den uken
+                </div>
+              </>
+            )}
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Startdato for mønster</label>
+              <input
+                type="date"
+                className="form-input"
+                value={custodyStartDate}
+                onChange={(e) => setCustodyStartDate(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Starter hos</label>
+              <select
+                className="form-input"
+                value={custodyStartWith}
+                onChange={(e) => setCustodyStartWith(e.target.value as any)}
+              >
+                <option value="mother">Mor</option>
+                <option value="father">Far</option>
+              </select>
+            </div>
+
+            {/* Advanced Features Section */}
+            <div style={{
+              marginTop: '2rem',
+              padding: '1rem',
+              backgroundColor: '#f9fafb',
+              borderRadius: '0.5rem',
+              marginBottom: '1rem'
+            }}>
+              <h4 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: '600' }}>
+                🔧 Avanserte funksjoner
+              </h4>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                  onClick={() => {
+                    setShowCustodyConfig(false);
+                    setShowHolidayExceptionsModal(true);
+                  }}
+                >
+                  🎄 Administrer høytider og ferier
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                  onClick={() => {
+                    setShowCustodyConfig(false);
+                    setShowRotationPeriodsModal(true);
+                  }}
+                >
+                  📅 Administrer rotasjonsperioder
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowCustodyConfig(false)}
+                style={{ flex: 1 }}
+              >
+                Lagre
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowCustodyConfig(false)}
+                style={{ flex: 1 }}
+              >
+                Avbryt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Location Settings Modal */}
+      {showLocationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '400px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>🌍 Velg lokasjon for værmeldinger</h3>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+                Velg din by for å få relevante værmeldinger i Familie kalender:
+              </p>
+
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {PREDEFINED_LOCATIONS.map((location) => (
+                  <button
+                    key={location.name}
+                    className={`btn ${userLocation.name === location.name ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ justifyContent: 'flex-start', width: '100%' }}
+                    onClick={() => {
+                      setUserLocation(location);
+                    }}
+                  >
+                    📍 {location.name}
+                    {userLocation.name === location.name && ' ✓'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowLocationModal(false)}
+              >
+                Avbryt
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowLocationModal(false)}
+              >
+                Lagre
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Holiday Exceptions Modal */}
+      {showHolidayExceptionsModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>🎄 Administrer høytider og ferier</h3>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+                Høytider og ferier overstyrer den normale samværsordningen:
+              </p>
+
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {holidayExceptions.map((holiday) => (
+                  <div
+                    key={holiday.id}
+                    className="card"
+                    style={{
+                      padding: '1rem',
+                      backgroundColor: holiday.custodyParent === 'mother' ? '#fef2f2' : '#eff6ff'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: 0, marginBottom: '0.25rem', fontSize: '1rem' }}>
+                          {holiday.name}
+                        </h4>
+                        <p style={{
+                          fontSize: '0.875rem',
+                          color: '#6b7280',
+                          margin: 0,
+                          marginBottom: '0.5rem'
+                        }}>
+                          {holiday.startDate} til {holiday.endDate}
+                        </p>
+                        <p style={{
+                          fontSize: '0.875rem',
+                          margin: 0,
+                          fontWeight: '500',
+                          color: holiday.custodyParent === 'mother' ? '#dc2626' : '#2563eb'
+                        }}>
+                          {holiday.custodyParent === 'mother' ? '👩 Mor har barna' : '👨 Far har barna'}
+                        </p>
+                        {holiday.notes && (
+                          <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+                            {holiday.notes}
+                          </p>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        backgroundColor: '#f3f4f6',
+                        color: '#6b7280'
+                      }}>
+                        {holiday.recurring}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowHolidayExceptionsModal(false)}
+              >
+                Lukk
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  // TODO: Add functionality to add new holiday exceptions
+                  alert('Funksjon for å legge til nye høytider kommer snart!');
+                }}
+              >
+                + Legg til høytid
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rotation Periods Modal */}
+      {showRotationPeriodsModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>📅 Administrer rotasjonsperioder</h3>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+                Rotasjonsperioder lar deg definere forskjellige samværsoppsett for ulike tidsperioder i året:
+              </p>
+
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {rotationPeriods.map((period) => (
+                  <div
+                    key={period.id}
+                    className="card"
+                    style={{
+                      padding: '1rem',
+                      backgroundColor: period.startingParent === 'mother' ? '#fef2f2' : '#eff6ff'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: 0, marginBottom: '0.25rem', fontSize: '1rem' }}>
+                          {period.name}
+                        </h4>
+                        <p style={{
+                          fontSize: '0.875rem',
+                          color: '#6b7280',
+                          margin: 0,
+                          marginBottom: '0.5rem'
+                        }}>
+                          {period.startDate} til {period.endDate}
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
+                          <span>
+                            <strong>Mønster:</strong> {
+                              period.pattern === 'alternating-weeks' ? 'Annenhver uke' : period.pattern
+                            }
+                          </span>
+                          <span style={{
+                            color: period.startingParent === 'mother' ? '#dc2626' : '#2563eb'
+                          }}>
+                            <strong>Starter med:</strong> {period.startingParent === 'mother' ? 'Mor' : 'Far'}
+                          </span>
+                        </div>
+                        {period.notes && (
+                          <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+                            {period.notes}
+                          </p>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        backgroundColor: '#f3f4f6',
+                        color: '#6b7280'
+                      }}>
+                        {period.weekDuration} uke{period.weekDuration > 1 ? 'r' : ''}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowRotationPeriodsModal(false)}
+              >
+                Lukk
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  // TODO: Add functionality to add new rotation periods
+                  alert('Funksjon for å legge til nye rotasjonsperioder kommer snart!');
+                }}
+              >
+                + Legg til periode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Checklist Item Modal */}
+      {showAddChecklistItemModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '400px' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>📝 Legg til fast gjenstand</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Gjenstand</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newChecklistItem}
+                onChange={(e) => setNewChecklistItem(e.target.value)}
+                placeholder="F.eks. Tannbørste, Klær til 2 dager..."
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleAddPermanentItem}
+                disabled={!newChecklistItem.trim()}
+              >
+                Legg til
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setNewChecklistItem('');
+                  setShowAddChecklistItemModal(false);
+                }}
+              >
+                Avbryt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Template Modal */}
+      {showAddTemplateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>📋 Opprett ny sjekkliste-mal</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Navn på mal</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newTemplate.name}
+                onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                placeholder="F.eks. Helgetur, Skoluke..."
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Gjenstander</label>
+              {newTemplate.items.map((item, index) => (
+                <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={item}
+                    onChange={(e) => {
+                      const updatedItems = [...newTemplate.items];
+                      updatedItems[index] = e.target.value;
+                      setNewTemplate({ ...newTemplate, items: updatedItems });
+                    }}
+                    placeholder="Gjenstand..."
+                  />
+                  {newTemplate.items.length > 1 && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        const updatedItems = newTemplate.items.filter((_, i) => i !== index);
+                        setNewTemplate({ ...newTemplate, items: updatedItems });
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                className="btn btn-secondary"
+                style={{ fontSize: '0.875rem' }}
+                onClick={() => setNewTemplate({ ...newTemplate, items: [...newTemplate.items, ''] })}
+              >
+                + Legg til gjenstand
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleAddTemplate}
+                disabled={!newTemplate.name.trim()}
+              >
+                Opprett mal
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setNewTemplate({ name: '', items: [''] });
+                  setShowAddTemplateModal(false);
+                }}
+              >
+                Avbryt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Template Modal */}
+      {showEditTemplateModal && editingTemplate && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>✏️ Rediger sjekkliste-mal</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Navn på mal</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editingTemplate.name}
+                onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                placeholder="F.eks. Helgetur, Skoluke..."
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Gjenstander</label>
+              {editingTemplate.items.map((item, index) => (
+                <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={item}
+                    onChange={(e) => {
+                      const updatedItems = [...editingTemplate.items];
+                      updatedItems[index] = e.target.value;
+                      setEditingTemplate({ ...editingTemplate, items: updatedItems });
+                    }}
+                    placeholder="Gjenstand..."
+                  />
+                  {editingTemplate.items.length > 1 && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        const updatedItems = editingTemplate.items.filter((_, i) => i !== index);
+                        setEditingTemplate({ ...editingTemplate, items: updatedItems });
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                className="btn btn-secondary"
+                style={{ fontSize: '0.875rem' }}
+                onClick={() => setEditingTemplate({ ...editingTemplate, items: [...editingTemplate.items, ''] })}
+              >
+                + Legg til gjenstand
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleEditTemplate}
+                disabled={!editingTemplate.name.trim()}
+              >
+                Lagre
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setEditingTemplate(null);
+                  setShowEditTemplateModal(false);
+                }}
+              >
+                Avbryt
+              </button>
+              <button
+                className="btn"
+                style={{ backgroundColor: '#dc2626', color: 'white' }}
+                onClick={() => {
+                  if (confirm(`Er du sikker på at du vil slette malen "${editingTemplate.name}"?`)) {
+                    handleDeleteTemplate(editingTemplate.id);
+                    setEditingTemplate(null);
+                    setShowEditTemplateModal(false);
+                  }
+                }}
+              >
+                Slett
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Family Member Modal */}
+      {showAddFamilyMemberModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>👥 Legg til familiemedlem</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Navn</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newFamilyMember.name}
+                onChange={(e) => setNewFamilyMember({ ...newFamilyMember, name: e.target.value })}
+                placeholder="Fult navn"
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Rolle</label>
+              <select
+                className="form-input"
+                value={newFamilyMember.role}
+                onChange={(e) => setNewFamilyMember({ ...newFamilyMember, role: e.target.value, parentIds: [] })}
+              >
+                <option value="mother">Mor</option>
+                <option value="father">Far</option>
+                <option value="child">Barn</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">E-post</label>
+              <input
+                type="email"
+                className="form-input"
+                value={newFamilyMember.email}
+                onChange={(e) => setNewFamilyMember({ ...newFamilyMember, email: e.target.value })}
+                placeholder="person@example.com"
+              />
+            </div>
+
+            {newFamilyMember.role === 'child' && (
+              <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Alder</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={newFamilyMember.age}
+                    onChange={(e) => setNewFamilyMember({ ...newFamilyMember, age: e.target.value })}
+                    placeholder="Alder i år"
+                    min="0"
+                    max="25"
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Foreldre</label>
+                  <div style={{ display: 'grid', gap: '0.5rem' }}>
+                    {getParentOptions().map(parent => (
+                      <label key={parent.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={newFamilyMember.parentIds.includes(parent.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewFamilyMember({
+                                ...newFamilyMember,
+                                parentIds: [...newFamilyMember.parentIds, parent.id]
+                              });
+                            } else {
+                              setNewFamilyMember({
+                                ...newFamilyMember,
+                                parentIds: newFamilyMember.parentIds.filter(id => id !== parent.id)
+                              });
+                            }
+                          }}
+                        />
+                        {parent.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleAddFamilyMember}
+                disabled={!newFamilyMember.name}
+              >
+                Legg til
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setNewFamilyMember({ name: '', role: 'child', email: '', age: '', parentIds: [] });
+                  setShowAddFamilyMemberModal(false);
+                }}
+              >
+                Avbryt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Family Member Modal */}
+      {showEditFamilyMemberModal && editingFamilyMember && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>✏️ Rediger familiemedlem</h3>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Navn</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editingFamilyMember.name}
+                onChange={(e) => setEditingFamilyMember({ ...editingFamilyMember, name: e.target.value })}
+                placeholder="Fult navn"
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="form-label">E-post</label>
+              <input
+                type="email"
+                className="form-input"
+                value={editingFamilyMember.email || ''}
+                onChange={(e) => setEditingFamilyMember({ ...editingFamilyMember, email: e.target.value })}
+                placeholder="person@example.com"
+              />
+            </div>
+
+            {editingFamilyMember.role === 'child' && (
+              <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Alder</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={editingFamilyMember.age || ''}
+                    onChange={(e) => setEditingFamilyMember({ ...editingFamilyMember, age: parseInt(e.target.value) })}
+                    placeholder="Alder i år"
+                    min="0"
+                    max="25"
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Foreldre</label>
+                  <div style={{ display: 'grid', gap: '0.5rem' }}>
+                    {getParentOptions().map(parent => (
+                      <label key={parent.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={editingFamilyMember.parentIds?.includes(parent.id) || false}
+                          onChange={(e) => {
+                            const currentParentIds = editingFamilyMember.parentIds || [];
+                            if (e.target.checked) {
+                              setEditingFamilyMember({
+                                ...editingFamilyMember,
+                                parentIds: [...currentParentIds, parent.id]
+                              });
+                            } else {
+                              setEditingFamilyMember({
+                                ...editingFamilyMember,
+                                parentIds: currentParentIds.filter(id => id !== parent.id)
+                              });
+                            }
+                          }}
+                        />
+                        {parent.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleEditFamilyMember}
+                disabled={!editingFamilyMember.name}
+              >
+                Lagre
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setEditingFamilyMember(null);
+                  setShowEditFamilyMemberModal(false);
+                }}
+              >
+                Avbryt
+              </button>
+              {!editingFamilyMember.isCurrentUser && (
+                <button
+                  className="btn"
+                  style={{ backgroundColor: '#dc2626', color: 'white' }}
+                  onClick={() => {
+                    if (confirm(`Er du sikker på at du vil slette ${editingFamilyMember.name}?`)) {
+                      handleDeleteFamilyMember(editingFamilyMember.id);
+                      setEditingFamilyMember(null);
+                      setShowEditFamilyMemberModal(false);
+                    }
+                  }}
+                >
+                  Slett
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hand Preference Toggle (temporary - will be in settings later) */}
+      <button
+        className="btn btn-secondary"
+        style={{
+          position: 'fixed',
+          top: '6rem',
+          right: '1rem',
+          fontSize: '0.75rem',
+          padding: '0.5rem',
+          zIndex: 1001
+        }}
+        onClick={() => setHandPreference(handPreference === 'left' ? 'right' : 'left')}
+        title="Bytt side for plusstegn"
+      >
+        🖐️ {handPreference === 'left' ? 'V' : 'H'}
+      </button>
+    </div>
+    </div>
+  );
+}

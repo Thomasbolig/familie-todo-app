@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_SUPABASE_URL = "https://ielcdljbrbwzpfthgwpu.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbGNkbGpicmJ3enBmdGhnd3B1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4OTEzMzgsImV4cCI6MjA3NTQ2NzMzOH0.2A8agp6YmDgYQddOCVs_9IE7iIaQaT-AqYIn8Ljsd3o"
+  SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbGNkbGpicmJ3enBmdGhnd3B1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTg5MTMzOCwiZXhwIjoyMDc1NDY3MzM4fQ.5iLsESxuikCXQ2YwfDSEsoPRhR0FgFb9cagWBhCDnYs"
+  DATABASE_URL = "postgresql://postgres:password@db.ielcdljbrbwzpfthgwpu.supabase.co:5432/postgres"
+  DIRECT_URL = "postgresql://postgres:password@db.ielcdljbrbwzpfthgwpu.supabase.co:5432/postgres"
+  NEXTAUTH_SECRET = "familie-todo-secret-key-2024-claude-code"
+  NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET = "family-todo-files"

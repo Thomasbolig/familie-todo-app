@@ -1,0 +1,1146 @@
+'use client';
+
+import { useState } from 'react';
+
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
+  const [timePeriod, setTimePeriod] = useState('3dager');
+  const [selectedPersonFilter, setSelectedPersonFilter] = useState('alle');
+  const [familyMembers, setFamilyMembers] = useState([
+    { id: 1, name: 'Emma', emoji: '👧', color: '#fef3c7', borderColor: '#f59e0b' },
+    { id: 2, name: 'Oliver', emoji: '👦', color: '#dbeafe', borderColor: '#3b82f6' },
+    { id: 3, name: 'Mor', emoji: '👩', color: '#f3e8ff', borderColor: '#8b5cf6' },
+    { id: 4, name: 'Far', emoji: '👨', color: '#e0f2fe', borderColor: '#0284c7' }
+  ]);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
+
+  // Calendar helper functions
+  const formatMonth = (date) => {
+    return date.toLocaleDateString('no-NO', { month: 'long', year: 'numeric' });
+  };
+
+  const isToday = (date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const getPersonForDate = (date) => {
+    const dayOfMonth = date.getDate();
+    const memberIndex = dayOfMonth % familyMembers.length;
+    return familyMembers[memberIndex];
+  };
+
+  const addFamilyMember = () => {
+    if (newMemberName.trim()) {
+      const emojis = ['👶', '🧒', '👧', '👦', '👩', '👨', '👴', '👵', '🤱', '👪'];
+      const colors = ['#fef3c7', '#dbeafe', '#f3e8ff', '#e0f2fe', '#f0fdf4', '#fef2f2'];
+      const borderColors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#0284c7', '#16a34a', '#dc2626'];
+
+      const newMember = {
+        id: Date.now(),
+        name: newMemberName.trim(),
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        color: colors[Math.floor(Math.random() * colors.length)],
+        borderColor: borderColors[Math.floor(Math.random() * borderColors.length)]
+      };
+
+      setFamilyMembers([...familyMembers, newMember]);
+      setNewMemberName('');
+      setShowAddMember(false);
+    }
+  };
+
+  const getActivitiesForPeriod = () => {
+    const today = new Date();
+    const activities = [];
+
+    if (timePeriod === '1dag') {
+      return [
+        { time: '08:00', title: 'Emma - Barnehage', person: 'Emma', type: 'barnehage' },
+        { time: '17:00', title: 'Oliver - Fotball', person: 'Oliver', type: 'sport' },
+        { time: '18:30', title: 'Familie middag', person: 'Familie', type: 'familie' }
+      ];
+    } else if (timePeriod === '3dager') {
+      return [
+        { time: 'I dag', title: 'Emma - Barnehage, Familie middag', person: 'Emma/Familie', type: 'mixed' },
+        { time: 'I morgen', title: 'Oliver - Fotball, Møte med advokat', person: 'Oliver/Foreldre', type: 'mixed' },
+        { time: 'Overmorgen', title: 'Familie tur til badet', person: 'Familie', type: 'familie' }
+      ];
+    } else { // 1uke
+      return [
+        { time: 'Man-Tir', title: 'Emma & Oliver - Skole/Barnehage', person: 'Barna', type: 'skole' },
+        { time: 'Ons-Tor', title: 'Fotball, Svømming, Familie tid', person: 'Alle', type: 'mixed' },
+        { time: 'Fre-Søn', title: 'Helg hos mor/far, Familie aktiviteter', person: 'Familie', type: 'familie' }
+      ];
+    }
+  };
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+
+    const days = [];
+
+    // Add empty slots for days before the first day of the month
+    for (let i = 0; i < startingDay; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+      {/* Mobile Header */}
+      <header style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 1rem' }} className="mobile-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: '600' }}>Familie TODO</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            style={{
+              padding: '0.5rem',
+              fontSize: '1.2rem',
+              background: 'none',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.5rem'
+            }}
+          >
+            ☰
+          </button>
+        </div>
+      </header>
+
+      {/* Desktop Layout */}
+      <div style={{ display: 'flex' }}>
+        {/* Sidebar */}
+        <aside data-mobile-menu="true" style={{
+          position: 'fixed',
+          top: 0,
+          left: showMobileMenu ? 0 : '-256px',
+          width: '256px',
+          height: '100vh',
+          background: 'white',
+          borderRight: '1px solid #e5e7eb',
+          padding: '1rem',
+          transition: 'left 0.3s ease',
+          zIndex: 1000
+        }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Familie TODO</h1>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Organiser familielivet</p>
+          </div>
+
+          <nav>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {[
+                { id: 'overview', label: '📊 Oversikt' },
+                { id: 'projects', label: '📁 Prosjekter' },
+                { id: 'calendar', label: '📅 Kalender' },
+                { id: 'family', label: '👨‍👩‍👧‍👦 Familie' }
+              ].map(item => (
+                <li key={item.id} style={{ marginBottom: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setShowMobileMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      border: 'none',
+                      borderRadius: '0.5rem',
+                      background: activeTab === item.id ? '#3b82f6' : 'transparent',
+                      color: activeTab === item.id ? 'white' : '#374151',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+
+        {/* Overlay for mobile menu */}
+        {showMobileMenu && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 999
+            }}
+            onClick={() => setShowMobileMenu(false)}
+          />
+        )}
+
+        {/* Main Content */}
+        <main style={{ flex: 1, padding: '0.75rem' }}>
+          {activeTab === 'overview' && (
+            <div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+                📊 Oversikt
+              </h1>
+
+              {/* Time Period Filters */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  Tidsperiode:
+                </h2>
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: '1dag', label: '1 dag' },
+                    { id: '3dager', label: '3 dager' },
+                    { id: '1uke', label: '1 uke' }
+                  ].map(period => (
+                    <button
+                      key={period.id}
+                      className={`btn ${timePeriod === period.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                      onClick={() => setTimePeriod(period.id)}
+                    >
+                      {period.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Weather Widget */}
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  ☀️ Været
+                </h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.125rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.125rem' }}>I dag</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.125rem' }}>☀️</div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: '500' }}>18°</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.125rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.125rem' }}>I morgen</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.125rem' }}>⛅</div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: '500' }}>16°</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.125rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.125rem' }}>Overmorgen</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.125rem' }}>🌧️</div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563', fontWeight: '500' }}>14°</div>
+                  </div>
+                </div>
+
+                {/* Activities based on time period */}
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                    📅 Aktiviteter ({timePeriod === '1dag' ? '1 dag' : timePeriod === '3dager' ? '3 dager' : '1 uke'})
+                  </h3>
+                  <div style={{ display: 'grid', gap: '0.25rem' }}>
+                    {getActivitiesForPeriod().map((activity, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.375rem 0.5rem',
+                          background: 'white',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          border: '1px solid #e5e7eb'
+                        }}
+                      >
+                        <div style={{ fontWeight: '500', color: '#374151' }}>
+                          {activity.time}
+                        </div>
+                        <div style={{
+                          flex: 1,
+                          paddingLeft: '0.5rem',
+                          color: '#6b7280',
+                          fontSize: '0.7rem',
+                          textAlign: 'right'
+                        }}>
+                          {activity.title}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Person Filter */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  Vis for:
+                </h2>
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                  <button
+                    className={`btn ${selectedPersonFilter === 'alle' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                    onClick={() => setSelectedPersonFilter('alle')}
+                  >
+                    👨‍👩‍👧‍👦 Alle
+                  </button>
+                  {familyMembers.map(member => (
+                    <button
+                      key={member.id}
+                      className={`btn ${selectedPersonFilter === member.name.toLowerCase() ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                      onClick={() => setSelectedPersonFilter(member.name.toLowerCase())}
+                    >
+                      {member.emoji} {member.name}
+                    </button>
+                  ))}
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem', background: '#f0fdf4', borderColor: '#16a34a', color: '#16a34a' }}
+                    onClick={() => setShowAddMember(true)}
+                  >
+                    + Person
+                  </button>
+                </div>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-3" style={{ marginBottom: '1rem' }}>
+                <div className="card" style={{ padding: '0.75rem' }}>
+                  <h3 style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Aktive Prosjekter
+                  </h3>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                    3
+                  </p>
+                </div>
+                <div className="card" style={{ padding: '0.75rem' }}>
+                  <h3 style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Oppgaver i dag
+                  </h3>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                    5
+                  </p>
+                </div>
+              </div>
+
+              {/* Calendar Widget */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                  📅 Kalender
+                </h2>
+
+                <div className="card" style={{ padding: '0.75rem' }}>
+                  {/* Calendar Header */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <button
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.25rem',
+                        cursor: 'pointer',
+                        padding: '0.25rem',
+                        color: '#6b7280'
+                      }}
+                      onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                    >
+                      ‹
+                    </button>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>
+                      {formatMonth(currentDate)}
+                    </h3>
+                    <button
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.25rem',
+                        cursor: 'pointer',
+                        padding: '0.25rem',
+                        color: '#6b7280'
+                      }}
+                      onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                    >
+                      ›
+                    </button>
+                  </div>
+
+                  {/* Day Headers */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '2px',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'].map(day => (
+                      <div key={day} style={{
+                        fontWeight: '600',
+                        color: '#6b7280',
+                        padding: '0.5rem 0',
+                        textAlign: 'center',
+                        fontSize: '0.75rem'
+                      }}>
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Days */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '2px'
+                  }}>
+                    {getDaysInMonth(currentDate).map((date, index) => {
+                      if (!date) {
+                        return <div key={index} style={{ aspectRatio: '1', minHeight: '32px' }} />;
+                      }
+
+                      const personForDate = getPersonForDate(date);
+                      const today = isToday(date);
+                      const hasActivities = (date.getDate() % 3) === 0; // Deterministic activities for demo
+
+                      return (
+                        <div
+                          key={index}
+                          className={`calendar-day ${today ? 'today' : ''}`}
+                          style={{
+                            aspectRatio: '1',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem',
+                            borderRadius: '0.25rem',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            minHeight: '32px',
+                            padding: '2px',
+                            background: today ? '#3b82f6' : personForDate.color,
+                            color: today ? 'white' : '#374151',
+                            border: `1px solid ${today ? '#2563eb' : personForDate.borderColor}`
+                          }}
+                          onClick={() => {
+                            const dateFormatted = date.toLocaleDateString('no-NO', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            });
+                            const custodyInfo = `Aktiviteter for ${personForDate.name} ${personForDate.emoji}`;
+                            const activities = hasActivities ? [
+                              { name: 'Emma - Barnehage', time: '08:00-16:00', type: 'barnehage' },
+                              { name: 'Oliver - Fotballtrening', time: '17:00-18:30', type: 'sport' },
+                              { name: 'Familie middag', time: '18:30-20:00', type: 'familie' }
+                            ] : [];
+
+                            setSelectedCalendarDay({
+                              date: dateFormatted,
+                              custodyInfo,
+                              activities,
+                              hasActivities,
+                              person: personForDate
+                            });
+                          }}
+                        >
+                          <span style={{ fontWeight: today ? '600' : '500' }}>
+                            {date.getDate()}
+                          </span>
+                          {hasActivities && (
+                            <div style={{
+                              width: '4px',
+                              height: '4px',
+                              borderRadius: '50%',
+                              marginTop: '2px',
+                              background: today ? 'rgba(255,255,255,0.8)' : personForDate.borderColor
+                            }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Legend */}
+                  <div style={{
+                    marginTop: '1rem',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.75rem',
+                    flexWrap: 'wrap'
+                  }}>
+                    {familyMembers.map(member => (
+                      <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          background: member.color,
+                          borderRadius: '2px',
+                          border: `1px solid ${member.borderColor}`
+                        }} />
+                        <span>{member.emoji} {member.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected Calendar Day Expanded Content */}
+              {selectedCalendarDay && (
+                <div style={{
+                  background: 'white',
+                  borderRadius: '0.75rem',
+                  padding: '1.5rem',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e5e7eb',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        📅 {selectedCalendarDay.date}
+                      </h3>
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                        👥 {selectedCalendarDay.custodyInfo}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCalendarDay(null)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.5rem',
+                        cursor: 'pointer',
+                        color: '#6b7280',
+                        padding: '0.25rem'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {selectedCalendarDay.hasActivities ? (
+                    <div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem' }}>Aktiviteter:</h4>
+                      <div style={{ display: 'grid', gap: '0.75rem' }}>
+                        {selectedCalendarDay.activities.map((activity, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#f8fafc',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #e2e8f0',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = '#f1f5f9';
+                              e.target.style.borderColor = '#cbd5e1';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = '#f8fafc';
+                              e.target.style.borderColor = '#e2e8f0';
+                            }}
+                            onClick={() => alert(`Klikket på aktivitet: ${activity.name} (${activity.time})`)}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: '500' }}>{activity.name}</span>
+                              <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{activity.time}</span>
+                            </div>
+                            <div style={{ marginTop: '0.25rem' }}>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                background: activity.type === 'barnehage' ? '#fef3c7' : activity.type === 'sport' ? '#dbeafe' : '#f3e8ff',
+                                color: activity.type === 'barnehage' ? '#92400e' : activity.type === 'sport' ? '#1e40af' : '#6b21a8'
+                              }}>
+                                {activity.type === 'barnehage' ? '🏫 Barnehage' : activity.type === 'sport' ? '⚽ Sport' : '👨‍👩‍👧‍👦 Familie'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '1rem' }}>
+                      <p>Ingen spesielle aktiviteter denne dagen.</p>
+                      <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>💡 Klikk på familiefiltrene for å se spesifikke aktiviteter!</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Simple project list */}
+              <div>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                  Aktive Prosjekter
+                </h2>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  <div className="card" style={{ padding: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600' }}>Selge huset</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>8/12 oppgaver - 65% fullført</p>
+                  </div>
+                  <div className="card" style={{ padding: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600' }}>Barnehage - Emma</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>4/5 oppgaver - 90% fullført</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Add Family Member Modal */}
+              {showAddMember && (
+                <div style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  zIndex: 1010,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '1rem'
+                }}>
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    width: '100%',
+                    maxWidth: '400px',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
+                      Legg til familiemedlem
+                    </h3>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label className="form-label">Navn:</label>
+                      <input
+                        className="form-input"
+                        type="text"
+                        value={newMemberName}
+                        onChange={(e) => setNewMemberName(e.target.value)}
+                        placeholder="Skriv navn..."
+                        style={{ marginBottom: '0.5rem' }}
+                        onKeyPress={(e) => e.key === 'Enter' && addFamilyMember()}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setShowAddMember(false);
+                          setNewMemberName('');
+                        }}
+                      >
+                        Avbryt
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        onClick={addFamilyMember}
+                        disabled={!newMemberName.trim()}
+                      >
+                        Legg til
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'projects' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                📁 Prosjekter
+              </h1>
+              <p>Prosjektfunksjonalitet kommer snart...</p>
+            </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                📅 Kalender
+              </h1>
+
+              {/* Person filter buttons */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  Vis for:
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    className={`btn ${selectedPersonFilter === 'alle' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                    onClick={() => setSelectedPersonFilter('alle')}
+                  >
+                    👨‍👩‍👧‍👦 Alle
+                  </button>
+                  {familyMembers.map(member => (
+                    <button
+                      key={member.id}
+                      className={`btn ${selectedPersonFilter === member.name.toLowerCase() ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      onClick={() => setSelectedPersonFilter(member.name.toLowerCase())}
+                    >
+                      {member.emoji} {member.name}
+                    </button>
+                  ))}
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: '#f0fdf4', borderColor: '#16a34a', color: '#16a34a' }}
+                    onClick={() => setShowAddMember(true)}
+                  >
+                    + Legg til person
+                  </button>
+                </div>
+              </div>
+
+              {/* Time range filter */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  Tidsperiode:
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {[
+                    { id: '1dag', label: '1 dag' },
+                    { id: '3dager', label: '3 dager' },
+                    { id: '1uke', label: '1 uke' }
+                  ].map(period => (
+                    <button
+                      key={period.id}
+                      className={`btn ${timePeriod === period.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      onClick={() => setTimePeriod(period.id)}
+                    >
+                      {period.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Weather widget */}
+              <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>
+                  ☀️ Været
+                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.25rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>I dag</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>☀️</div>
+                    <div style={{ fontSize: '0.7rem', color: '#4b5563', fontWeight: '500' }}>18°</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.25rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>I morgen</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>⛅</div>
+                    <div style={{ fontSize: '0.7rem', color: '#4b5563', fontWeight: '500' }}>16°</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, padding: '0.25rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>Overmorgen</div>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>🌧️</div>
+                    <div style={{ fontSize: '0.7rem', color: '#4b5563', fontWeight: '500' }}>14°</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calendar widget */}
+              <div className="card" style={{ padding: '1rem', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
+                  📅 Kalender
+                </h3>
+
+                {/* Calendar Header */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem'
+                }}>
+                  <button
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      color: '#6b7280'
+                    }}
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                  >
+                    ‹
+                  </button>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                    {formatMonth(currentDate)}
+                  </h4>
+                  <button
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      color: '#6b7280'
+                    }}
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                  >
+                    ›
+                  </button>
+                </div>
+
+                {/* Day Headers */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '2px',
+                  marginBottom: '0.5rem'
+                }}>
+                  {['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'].map(day => (
+                    <div key={day} style={{
+                      fontWeight: '600',
+                      color: '#6b7280',
+                      padding: '0.5rem 0',
+                      textAlign: 'center',
+                      fontSize: '0.75rem'
+                    }}>
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Days */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '2px'
+                }}>
+                  {getDaysInMonth(currentDate).map((date, index) => {
+                    if (!date) {
+                      return <div key={index} style={{ aspectRatio: '1', minHeight: '32px' }} />;
+                    }
+
+                    const personForDate = getPersonForDate(date);
+                    const today = isToday(date);
+                    const hasActivities = (date.getDate() % 3) === 0;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-day ${today ? 'today' : ''}`}
+                        style={{
+                          aspectRatio: '1',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.75rem',
+                          borderRadius: '0.25rem',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          minHeight: '32px',
+                          padding: '2px',
+                          background: today ? '#3b82f6' : personForDate.color,
+                          color: today ? 'white' : '#374151',
+                          border: `1px solid ${today ? '#2563eb' : personForDate.borderColor}`
+                        }}
+                        onClick={() => {
+                          const dateFormatted = date.toLocaleDateString('no-NO', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          });
+                          const custodyInfo = `Aktiviteter for ${personForDate.name} ${personForDate.emoji}`;
+                          const activities = hasActivities ? [
+                            { name: 'Emma - Barnehage', time: '08:00-16:00', type: 'barnehage' },
+                            { name: 'Oliver - Fotballtrening', time: '17:00-18:30', type: 'sport' },
+                            { name: 'Familie middag', time: '18:30-20:00', type: 'familie' }
+                          ] : [];
+
+                          setSelectedCalendarDay({
+                            date: dateFormatted,
+                            custodyInfo,
+                            activities,
+                            hasActivities,
+                            person: personForDate
+                          });
+                        }}
+                      >
+                        <span style={{ fontWeight: today ? '600' : '500' }}>
+                          {date.getDate()}
+                        </span>
+                        {hasActivities && (
+                          <div style={{
+                            width: '4px',
+                            height: '4px',
+                            borderRadius: '50%',
+                            marginTop: '2px',
+                            background: today ? 'rgba(255,255,255,0.8)' : personForDate.borderColor
+                          }} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Legend */}
+                <div style={{
+                  marginTop: '1rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.75rem',
+                  flexWrap: 'wrap'
+                }}>
+                  {familyMembers.map(member => (
+                    <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <div style={{
+                        width: '12px',
+                        height: '12px',
+                        background: member.color,
+                        borderRadius: '2px',
+                        border: `1px solid ${member.borderColor}`
+                      }} />
+                      <span>{member.emoji} {member.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Calendar Day Expanded Content */}
+              {selectedCalendarDay && (
+                <div style={{
+                  background: 'white',
+                  borderRadius: '0.75rem',
+                  padding: '1.5rem',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e5e7eb',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        📅 {selectedCalendarDay.date}
+                      </h3>
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                        👥 {selectedCalendarDay.custodyInfo}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCalendarDay(null)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.5rem',
+                        cursor: 'pointer',
+                        color: '#6b7280',
+                        padding: '0.25rem'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {selectedCalendarDay.hasActivities ? (
+                    <div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.75rem' }}>Aktiviteter:</h4>
+                      <div style={{ display: 'grid', gap: '0.75rem' }}>
+                        {selectedCalendarDay.activities.map((activity, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#f8fafc',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #e2e8f0',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = '#f1f5f9';
+                              e.target.style.borderColor = '#cbd5e1';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = '#f8fafc';
+                              e.target.style.borderColor = '#e2e8f0';
+                            }}
+                            onClick={() => alert(`Klikket på aktivitet: ${activity.name} (${activity.time})`)}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: '500' }}>{activity.name}</span>
+                              <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{activity.time}</span>
+                            </div>
+                            <div style={{ marginTop: '0.25rem' }}>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                background: activity.type === 'barnehage' ? '#fef3c7' : activity.type === 'sport' ? '#dbeafe' : '#f3e8ff',
+                                color: activity.type === 'barnehage' ? '#92400e' : activity.type === 'sport' ? '#1e40af' : '#6b21a8'
+                              }}>
+                                {activity.type === 'barnehage' ? '🏫 Barnehage' : activity.type === 'sport' ? '⚽ Sport' : '👨‍👩‍👧‍👦 Familie'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '1rem' }}>
+                      <p>Ingen spesielle aktiviteter denne dagen.</p>
+                      <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>💡 Klikk på familiefiltrene for å se spesifikke aktiviteter!</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'family' && (
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                👨‍👩‍👧‍👦 Familie
+              </h1>
+              <p>Familiefunksjonalitet kommer snart...</p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Floating Action Button with Menu */}
+      <div className="floating-action-container" style={{
+        position: 'fixed',
+        bottom: '1rem',
+        right: '1rem',
+        zIndex: 1005
+      }}>
+        {/* Floating Menu Overlay */}
+        {showFloatingMenu && (
+          <div
+            className="floating-menu-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1000,
+              background: 'transparent'
+            }}
+            onClick={() => setShowFloatingMenu(false)}
+          />
+        )}
+
+        {/* Floating Menu Items */}
+        {showFloatingMenu && (
+          <div className="floating-menu" style={{
+            position: 'absolute',
+            bottom: '5rem',
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            zIndex: 1001
+          }}>
+            <button
+              className="btn btn-primary"
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '50%',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+              onClick={() => {
+                setShowAddMember(true);
+                setShowFloatingMenu(false);
+              }}
+            >
+              👤
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '50%',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+              onClick={() => {
+                alert('Legg til oppgave kommer snart!');
+                setShowFloatingMenu(false);
+              }}
+            >
+              📝
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '50%',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+              onClick={() => {
+                alert('Legg til prosjekt kommer snart!');
+                setShowFloatingMenu(false);
+              }}
+            >
+              📁
+            </button>
+          </div>
+        )}
+
+        {/* Main Floating Button */}
+        <button
+          className="btn btn-primary floating-button"
+          style={{
+            width: '4rem',
+            height: '4rem',
+            borderRadius: '50%',
+            fontSize: '1.5rem',
+            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            transform: showFloatingMenu ? 'rotate(45deg)' : 'rotate(0deg)'
+          }}
+          onClick={() => setShowFloatingMenu(!showFloatingMenu)}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
